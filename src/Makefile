@@ -21,27 +21,29 @@ GEN_PATH=parser
 DATA=$(ROOT)/tests
 IN=$(DATA)/in
 
+FILE=../../examples/ex01.pascal
+
 all: antlr javac
 	@echo "Done."
 
 # Opção -no-listener foi usada para que o ANTLR não gere alguns arquivos
 # desnecessários para o momento. Isto será explicado melhor nos próximos labs.
-antlr: EZLexer.g EZParser.g
-	$(ANTLR4) -no-listener -o $(GEN_PATH) EZLexer.g EZParser.g
+antlr: pascalLexer.g
+	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g
 
 javac:
 	$(JAVAC) $(CLASS_PATH_OPTION) $(GEN_PATH)/*.java
 
-# 'EZ' é o prefixo comum das duas gramáticas (EZLexer e EZParser).
-# 'program' é a regra inicial de EZParser.
+# 'pascal' é o prefixo comum das duas gramáticas (pascalLexer e pascalParser).
+# 'program' é a regra inicial de pascalParser.
 run:
-	cd $(GEN_PATH) && $(GRUN) EZ program $(FILE)
+	cd $(GEN_PATH) && $(GRUN) pascalLexer program $(FILE)
 
 runall:
-	-for FILE in $(IN)/*.ezl; do \
+	-for FILE in $(IN)/*.pascall; do \
 	 	cd $(GEN_PATH) && \
 	 	echo -e "\nRunning $${FILE}" && \
-	 	$(GRUN) EZ program $${FILE} && \
+	 	$(GRUN) pascal program $${FILE} && \
 	 	cd .. ; \
 	done;
 
