@@ -28,8 +28,8 @@ all: antlr javac
 
 # Opção -no-listener foi usada para que o ANTLR não gere alguns arquivos
 # desnecessários para o momento. Isto será explicado melhor nos próximos labs.
-antlr: pascalLexer.g
-	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g
+antlr: pascalLexer.g pascalParser.g
+	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g pascalParser.g
 
 javac:
 	$(JAVAC) $(CLASS_PATH_OPTION) $(GEN_PATH)/*.java
@@ -37,7 +37,7 @@ javac:
 # 'pascal' é o prefixo comum das duas gramáticas (pascalLexer e pascalParser).
 # 'program' é a regra inicial de pascalParser.
 run:
-	cd $(GEN_PATH) && $(GRUN) pascalLexer program $(FILE)
+	cd $(GEN_PATH) && $(GRUN) pascal program $(FILE)
 
 runall:
 	-for FILE in $(IN)/*.pascall; do \
