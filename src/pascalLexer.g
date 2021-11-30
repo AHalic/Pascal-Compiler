@@ -541,6 +541,12 @@ COMMENT_2
    ;
 
 
+// TODO ver se eh necessario
+COMMENT_3
+   : '//' ~[\n]*  -> skip
+   ;
+
+
 IDENT
    : ('a' .. 'z' | 'A' .. 'Z') ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_')*
    ;
