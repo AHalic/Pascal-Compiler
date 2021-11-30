@@ -1,7 +1,7 @@
 program add(input, output);
  
 (*** Simple program to add 2 integer arrays element by element.  ***)
- 
+
 const
   size = 5;
  
