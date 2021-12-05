@@ -3,10 +3,10 @@ program add(input, output);
 (*** Simple program to add 2 integer arrays element by element.  ***)
 
 const
-  size = 5;
+  sIze = 5;
  
 type
-  intarray = array [1..size] of integer;
+  intarray = array [1..Size] of integer;
  
 var
    i: integer;
@@ -19,18 +19,18 @@ var
    i: integer;
  
 begin
-  for i := 1 to size do
+  for i := 1 to SIZE do
      b[i] := a[i] + b[i];
 end;
  
 (* **************************    main      ********************************** *)
  
 begin
-  for i := 1 to size do 
+  for i := 1 to siZe do 
      a[i] := i;
  
   writeln('The array before call to adder:');
-  for i := 1 to size do 
+  for i := 1 to sizE do 
      write (a[i]);
   writeln;
  

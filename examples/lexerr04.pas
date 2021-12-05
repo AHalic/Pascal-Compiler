@@ -1,7 +1,7 @@
-
 program HelloWorld;   
+
 begin    
- write('Hello World.); 
+ write("Hello World.");
  readln;   
 end.
 
