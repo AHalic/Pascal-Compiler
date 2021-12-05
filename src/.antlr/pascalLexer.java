@@ -1,4 +1,4 @@
-// Generated from /home/marco/Área de Trabalho/Pascal-Compiler/src/pascalLexer.g by ANTLR 4.8
+// Generated from /Users/denisgama/Documents/Compiladores/Pascal-Compiler/src/pascalLexer.g4 by ANTLR 4.8
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -119,7 +119,7 @@ public class pascalLexer extends Lexer {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "pascalLexer.g"; }
+	public String getGrammarFileName() { return "pascalLexer.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
