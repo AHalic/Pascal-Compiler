@@ -21,15 +21,15 @@ GEN_PATH=parser
 DATA=$(ROOT)/tests
 IN=$(DATA)/in
 
-FILE=../../examples/ex01.pascal
+FILE=../../examples/lexerr02.pas
 
 all: antlr javac
 	@echo "Done."
 
 # Opção -no-listener foi usada para que o ANTLR não gere alguns arquivos
 # desnecessários para o momento. Isto será explicado melhor nos próximos labs.
-antlr: pascalLexer.g pascalParser.g
-	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g pascalParser.g
+antlr: pascalLexer.g4 pascalParser.g4
+	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g4 pascalParser.g4
 
 javac:
 	$(JAVAC) $(CLASS_PATH_OPTION) $(GEN_PATH)/*.java
