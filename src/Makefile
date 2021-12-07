@@ -18,10 +18,10 @@ GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
 GEN_PATH=parser
 
 # Diretório para os casos de teste
-DATA=$(ROOT)/tests
+DATA=../../examples
 IN=$(DATA)/in
 
-FILE=../../examples/lexerr02.pas
+FILE=../../examples/synerr06.pas
 
 all: antlr javac
 	@echo "Done."
@@ -40,10 +40,11 @@ run:
 	cd $(GEN_PATH) && $(GRUN) pascal program $(FILE)
 
 runall:
-	-for FILE in $(IN)/*.pascall; do \
+	for FILE in ${DATA}/*.pas; do \
 	 	cd $(GEN_PATH) && \
-	 	echo -e "\nRunning $${FILE}" && \
-	 	$(GRUN) pascal program $${FILE} && \
+	 	echo -e "\n\nRunning $${FILE}" && \
+		$(GRUN) pascal program $${FILE} && \
+		echo -e "\n$${FILE} Done" && \
 	 	cd .. ; \
 	done;
 
