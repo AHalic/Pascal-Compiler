@@ -1,41 +1,38 @@
-# Modifique as variaveis conforme o seu setup.
-
 JAVA=java
 JAVAC=javac
 
-# Eu uso ROOT como o diretório raiz para os meus labs.
 YEAR=$(shell pwd | grep -o '20..-.')
-ROOT=/usr/local/lib
 
-ANTLR_PATH=$(ROOT)/antlr-4.9.3-complete.jar
+# TODO: change this two variables to yours path
+ROOT=/usr/local/lib # where this Compiler code is located
+ANTLR_PATH=$(ROOT)/antlr-4.9.3-complete.jar # where your antlr is located
+
 CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
-# Comandos como descritos na página do ANTLR.
+
 ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
 GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
 
-# Diretório para aonde vão os arquivos gerados.
+# Directory to which the generated files go
 GEN_PATH=parser
 
-# Diretório para os casos de teste
+# Directory containing the tests
 DATA=../../examples
-IN=$(DATA)/in
 
+
+# Change to the name of the test you want to run
 FILE=../../examples/synerr06.pas
+
 
 all: antlr javac
 	@echo "Done."
 
-# Opção -no-listener foi usada para que o ANTLR não gere alguns arquivos
-# desnecessários para o momento. Isto será explicado melhor nos próximos labs.
 antlr: pascalLexer.g4 pascalParser.g4
 	$(ANTLR4) -no-listener -o $(GEN_PATH) pascalLexer.g4 pascalParser.g4
 
 javac:
 	$(JAVAC) $(CLASS_PATH_OPTION) $(GEN_PATH)/*.java
 
-# 'pascal' é o prefixo comum das duas gramáticas (pascalLexer e pascalParser).
-# 'program' é a regra inicial de pascalParser.
 run:
 	cd $(GEN_PATH) && $(GRUN) pascal program $(FILE)
 
