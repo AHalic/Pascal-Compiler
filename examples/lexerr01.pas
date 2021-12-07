@@ -3,14 +3,14 @@ program add(input, output);
 (*** Simple program to add 2 integer arrays element by element.  ***)
 
 const
-  _size = 5;  (* wrong declaration, cant start with underscore *)
+  _size = 5;  (* wrong declaration, can't start with underscore *)
  
 type
   intarray = array [1..size] of integer;
  
 var
    i: integer;
-   3b: integer; (* wrong declaration, cant start with number *)
+   3b: integer; (* wrong declaration, can't start with number *)
    a: intarray;
  
 (* ***************************    adder    ********************************** *)
