@@ -2,7 +2,7 @@ program posneg;
 uses crt;
 var 
  no : integer;
- do: string;
+ do: string; (* Uso de palavra reservada*)
 begin
  clrscr;
   Write('Enger a number:');

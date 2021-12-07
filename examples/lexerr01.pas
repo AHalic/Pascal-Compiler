@@ -6,7 +6,7 @@ const
   _size = 5;  (* wrong declaration, cant start with underscore *)
  
 type
-  intarray = array [1.._size] of integer;
+  intarray = array [1..size] of integer;
  
 var
    i: integer;
@@ -20,25 +20,25 @@ var
    i: integer;
  
 begin
-  for i := 1 to _size do
+  for i := 1 to size do
      b[i] := a[i] + b[i];
 end;
  
 (* **************************    main      ********************************** *)
  
 begin
-  for i := 1 to _size do 
+  for i := 1 to size do 
      a[i] := i;
  
   writeln('The array before call to adder:');
-  for i := 1 to _size do 
+  for i := 1 to size do 
      write (a[i]);
   writeln;
  
   adder(a,a);
  
   writeln('The array after call to adder:');
-  for i := 1 to _size do 
+  for i := 1 to size do 
      write (a[i]);
   writeln;
 end.
