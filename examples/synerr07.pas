@@ -17,7 +17,7 @@ begin
         4: writeln('Senior');
         5: begin
              writeln('Congratulations, you have graduated ... ');
-             writeln('Graduate student???');
+             writeln('Graduate student???' ;
             end
       end
     end
