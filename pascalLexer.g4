@@ -31,6 +31,10 @@ Adapted from pascal.g by  Hakki Dogusan, Piet Schoutteten and Marton Papp
 
 lexer grammar pascalLexer;
 
+@header {
+    package parser;
+}
+
 fragment A
    : ('a' | 'A')
    ;

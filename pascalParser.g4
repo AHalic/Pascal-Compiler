@@ -36,6 +36,9 @@ options {
     tokenVocab = pascalLexer; // Indica que os tokens estão na "lexer grammar".
 }
 
+@header {
+    package parser;
+}
 
 program
    : programHeading (INTERFACE)? block DOT
