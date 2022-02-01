@@ -1,7 +1,7 @@
 package checker;
 
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
+// import org.antlr.v4.runtime.tree.TerminalNode;
 
 import parser.pascalParser.ExprStrValContext;
 import parser.pascalParserBaseVisitor;
