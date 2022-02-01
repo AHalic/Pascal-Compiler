@@ -4,3 +4,4 @@ compiler
 parser
 .antlr
 bin
+out

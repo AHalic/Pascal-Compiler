@@ -3,11 +3,22 @@ package tables;
 import java.util.HashMap;
 import java.util.Formatter;
 
-public class StrTable extends HashMap<String, String> {
+public class StrTable extends HashMap<Integer, String> {
+    private int counter = 0;
     
-    @Override
-    public String put(String s1, String s2) {
-        return super.put(s1, s2);
+    public int putStr(String value) {
+        if(this.containsValue(value)) {
+            for (int key: this.keySet()) {
+                if (this.get(key).equals(value)) {
+                    return key;
+                }
+            }
+            return -1;
+        } else {
+            super.put(counter, value);
+            counter++;
+            return counter - 1;
+        }
     }
 
     public String toString() {
@@ -16,9 +27,9 @@ public class StrTable extends HashMap<String, String> {
 
         f.format("Strings table:\n");
 
-        for (String str: this.keySet()) {
-            String value = this.get(str);
-            f.format("Entry -- %s\n", value);
+        for (Integer key: this.keySet()) {
+            String value = this.get(key);
+            f.format("Entry %d -- %s\n", key, value);
         }
 
 		f.close();
