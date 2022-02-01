@@ -511,8 +511,8 @@ USES
 
 
 STRING
-   : S T R I N G
-   ;
+   : S T R I N G 
+   ; 
 
 
 IMPLEMENTATION

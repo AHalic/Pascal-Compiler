@@ -367,10 +367,10 @@ factor
    ;
 
 unsignedConstant
-   : unsignedNumber
-   | constantChr
-   | string
-   | NIL
+   : unsignedNumber  # none
+   | constantChr     # none
+   | string          # exprStrVal
+   | NIL             # none
    ;
 
 functionDesignator

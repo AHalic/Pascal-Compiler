@@ -16,7 +16,7 @@ MAIN_PATH=checker
 BIN_PATH=bin
 
 IN=examples
-OUT=./out05
+OUT=./out
 
 all: antlr javac
 	@echo "Done."

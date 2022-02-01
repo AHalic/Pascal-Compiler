@@ -3,3 +3,4 @@ compiler
 .DS_STORE
 parser
 .antlr
+bin

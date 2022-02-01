@@ -26,5 +26,11 @@ public class Main {
 			// Houve algum erro sintático. Termina a compilação aqui.
 			return;
 		}
+
+        SemanticChecker checker = new SemanticChecker();
+        checker.visit(tree);
+        checker.printTables();
+
+        System.out.println("PARSE SUCCESSFUL!");
     }
 }
