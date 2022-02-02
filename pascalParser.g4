@@ -154,9 +154,18 @@ subrangeType
    : constant DOTDOT constant
    ;
 
+// typeIdentifier
+//    : identifier
+//    | (CHAR | BOOLEAN | INTEGER | REAL | STRING)
+//    ;
+
 typeIdentifier
-   : identifier
-   | (CHAR | BOOLEAN | INTEGER | REAL | STRING)
+   : identifier   # TALVEZSTRUCTNAOSEI /* VERIFICAR AQUI! */
+   | CHAR         # charType
+   | BOOLEAN      # boolType
+   | INTEGER      # intType
+   | REAL         # realType  
+   | STRING       # strType
    ;
 
 structuredType
