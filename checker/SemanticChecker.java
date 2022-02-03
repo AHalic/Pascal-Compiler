@@ -4,12 +4,20 @@ import org.antlr.v4.runtime.Token;
 // import org.antlr.v4.runtime.tree.TerminalNode;
 
 import ast.AST;
+import ast.NodeKind;
+
+import static ast.NodeKind.BLOCK_NODE;
+import static ast.NodeKind.PROGRAM_NODE;
 import static ast.NodeKind.STR_VAL_NODE;
 import static ast.NodeKind.VAR_DECL_NODE;
+import static ast.NodeKind.VAR_LIST_NODE;
 import static ast.NodeKind.VAR_USE_NODE;
 
 import parser.pascalParser;
+import parser.pascalParser.CompoundStatementContext;
 import parser.pascalParser.ExprStrValContext;
+import parser.pascalParser.ProgramContext;
+import parser.pascalParser.VariableDeclarationPartContext;
 import parser.pascalParserBaseVisitor;
 
 import tables.StrTable;
@@ -17,6 +25,7 @@ import tables.VarTable;
 
 import typing.Type;
 import static typing.Type.BOOL_TYPE;
+import static typing.Type.NO_TYPE;
 import static typing.Type.STR_TYPE;
 
 public class SemanticChecker extends pascalParserBaseVisitor<AST> {
@@ -95,6 +104,53 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 
     // ----------------------------------------------------------------------------
     // Visitadores.
+
+    // Visita a regra program: PROGRAM ID SEMI vars_sect stmt_sect
+    @Override
+	public AST visitProgram(ProgramContext ctx) {
+        // TODO
+        // O que é o inteiro? Talvez numero de blocos
+    	// Visita recursivamente os filhos para construir a AST.
+    	// AST varsSect = visit(ctx.block().variableDeclarationPart(0));
+    	AST stmtSect = visit(ctx.block().compoundStatement());
+    	// Como esta é a regra inicial, chegamos na raiz da AST.
+    	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, null, stmtSect);
+
+		return this.root;
+	}
+
+    // Visita a regra vars_sect: VAR var_decl*
+    @Override
+	public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
+    	// Para facilitar, sempre crio um nó com a lista das variáveis.
+    	// Assim, não precisa ficar testando depois se ele existe ou não.
+    	// Se não houverem variáveis declaradas, o nó fica sem filhos.
+    	AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
+    	// No caso de não-terminais com fechos (* ou +), a chamada do método
+    	// correspondente retorna uma lista com todos os elementos da Parse
+    	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
+    	// lista para construir as subárvores dos filhos.
+    	// Também é possível usar o iterador da lista aqui mas prefiro esse
+    	// estilo de loop clássico...
+    	// for (int i = 0; i < ctx.var_decl().size(); i++) {
+    	// 	AST child = visit(ctx.var_decl(i));
+    	// 	node.addChild(child);
+    	// }
+    	return node;
+	}
+
+	// Visita a regra stmt_sect: BEGIN stmt+ END
+	@Override
+	public AST visitCompoundStatement(CompoundStatementContext ctx) {
+		AST node = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+
+		for (int i = 0; i < ctx.statements().statement().size(); i++) {
+			AST child = visit(ctx.statements().statement(i));
+			node.addChild(child);
+		}
+
+		return node;
+	}
 
     // Visita a regra type_spec: BOOL
     @Override

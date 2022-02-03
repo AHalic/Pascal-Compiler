@@ -159,6 +159,7 @@ subrangeType
 //    | (CHAR | BOOLEAN | INTEGER | REAL | STRING)
 //    ;
 
+// TODO
 typeIdentifier
    : identifier   # TALVEZSTRUCTNAOSEI /* VERIFICAR AQUI! */
    | CHAR         # charType
@@ -436,7 +437,7 @@ structuredStatement
    | withStatement
    ;
 
-compoundStatement
+compoundStatement /* Statement section */
    : BEGIN statements END
    ;
 
