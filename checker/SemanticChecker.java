@@ -16,7 +16,10 @@ import static ast.NodeKind.VAR_USE_NODE;
 import parser.pascalParser;
 import parser.pascalParser.CompoundStatementContext;
 import parser.pascalParser.ExprStrValContext;
+import parser.pascalParser.IdentifierContext;
+import parser.pascalParser.IdentifierListContext;
 import parser.pascalParser.ProgramContext;
+import parser.pascalParser.VariableDeclarationContext;
 import parser.pascalParser.VariableDeclarationPartContext;
 import parser.pascalParserBaseVisitor;
 
@@ -93,8 +96,8 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
         System.out.print("\n\n");
         System.out.print(st);
         System.out.print("\n\n");
-    	// System.out.print(vt);
-    	// System.out.print("\n\n");
+    	System.out.print(vt);
+    	System.out.print("\n\n");
     }
 
     // Exibe a AST no formato DOT em stderr.
@@ -105,41 +108,39 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
     // ----------------------------------------------------------------------------
     // Visitadores.
 
-    // Visita a regra program: PROGRAM ID SEMI vars_sect stmt_sect
+    // Visita a regra program: programHeading (INTERFACE)? block DOT
     @Override
 	public AST visitProgram(ProgramContext ctx) {
         // TODO
-        // O que é o inteiro? Talvez numero de blocos
+        // Pode ter mais de uma seção para variáveis, portanto talvez precise iterar sobre elas
     	// Visita recursivamente os filhos para construir a AST.
-    	// AST varsSect = visit(ctx.block().variableDeclarationPart(0));
+		AST varsSect = null;
+
+		System.out.println(ctx.block().variableDeclarationPart().size());
+		if (ctx.block().variableDeclarationPart().size() > 0) {
+			varsSect = visit(ctx.block().variableDeclarationPart(0));
+		}
+
     	AST stmtSect = visit(ctx.block().compoundStatement());
     	// Como esta é a regra inicial, chegamos na raiz da AST.
-    	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, null, stmtSect);
+    	this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, varsSect, stmtSect);
 
 		return this.root;
 	}
 
-    // Visita a regra vars_sect: VAR var_decl*
+    // Visita a regra variableDeclarationPart: VAR variableDeclaration (SEMI variableDeclaration)* SEMI
     @Override
 	public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
-    	// Para facilitar, sempre crio um nó com a lista das variáveis.
-    	// Assim, não precisa ficar testando depois se ele existe ou não.
-    	// Se não houverem variáveis declaradas, o nó fica sem filhos.
     	AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
-    	// No caso de não-terminais com fechos (* ou +), a chamada do método
-    	// correspondente retorna uma lista com todos os elementos da Parse
-    	// Tree que entraram no fecho. Assim, podemos percorrer (visitar) a
-    	// lista para construir as subárvores dos filhos.
-    	// Também é possível usar o iterador da lista aqui mas prefiro esse
-    	// estilo de loop clássico...
-    	// for (int i = 0; i < ctx.var_decl().size(); i++) {
-    	// 	AST child = visit(ctx.var_decl(i));
-    	// 	node.addChild(child);
-    	// }
+
+    	for (int i = 0; i < ctx.variableDeclaration().size(); i++) {
+			AST child = visit(ctx.variableDeclaration(i));
+			node.addChild(child);
+    	}
     	return node;
 	}
 
-	// Visita a regra stmt_sect: BEGIN stmt+ END
+	// Visita a regra compoundStatement: BEGIN statements END
 	@Override
 	public AST visitCompoundStatement(CompoundStatementContext ctx) {
 		AST node = AST.newSubtree(BLOCK_NODE, NO_TYPE);
@@ -152,7 +153,7 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 		return node;
 	}
 
-    // Visita a regra type_spec: BOOL
+    // Visita a regra typeIdentifier: BOOLEAN
     @Override
     public AST visitBoolType(pascalParser.BoolTypeContext ctx) {
     	this.lastDeclType = Type.BOOL_TYPE;
@@ -161,7 +162,7 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
     	return null;
     }
 
-	// Visita a regra type_spec: INT
+	// Visita a regra typeIdentifier: INTEGER
 	@Override
 	public AST visitIntType(pascalParser.IntTypeContext ctx) {
 		this.lastDeclType = Type.INT_TYPE;
@@ -170,7 +171,7 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 		return null;
 	}
 
-	// Visita a regra type_spec: REAL
+	// Visita a regra typeIdentifier: REAL
 	@Override
 	public AST visitRealType(pascalParser.RealTypeContext ctx) {
 		this.lastDeclType = Type.REAL_TYPE;
@@ -179,7 +180,7 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 		return null;
     }
 
-	// Visita a regra type_spec: STRING
+	// Visita a regra typeIdentifier: STRING
 	@Override
 	public AST visitStrType(pascalParser.StrTypeContext ctx) {
 		this.lastDeclType = Type.STR_TYPE;
@@ -188,8 +189,22 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 		return null;
 	}
 
+	// // Visita a regra identifier: IDENT
+	// @Override
+	// public AST visitIdentifier(IdentifierContext ctx) {
+	// 	return checkVar(ctx.IDENT().getSymbol());
+	// }
+
+	// Visita a regra identifierList: identifier (COMMA identifier)*
+	@Override
+	public AST visitVariableDeclaration(VariableDeclarationContext ctx) {
+		visit(ctx.type_());
+		return newVar(ctx.identifierList().identifier(0).IDENT().getSymbol());
+		// return null;
+	}
+
     @Override
-	// Visita a regra expr: STR_VAL
+	// Visita a regra unsignedConstant: string
 	public AST visitExprStrVal(ExprStrValContext ctx) {
 		// Adiciona a string na tabela de strings.
 		int idx = st.putStr(ctx.string().getText());
