@@ -134,10 +134,21 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
     	AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
 
     	for (int i = 0; i < ctx.variableDeclaration().size(); i++) {
-			AST child = visit(ctx.variableDeclaration(i));
-			node.addChild(child);
+			// AST child = visit(ctx.variableDeclaration(i));
+			for (int j = 0; j < ctx.variableDeclaration(i).identifierList().identifier().size(); j++) {
+				visit(ctx.variableDeclaration(i).type_());
+				AST child = newVar(ctx.variableDeclaration(i).identifierList().identifier(j).IDENT().getSymbol());
+				node.addChild(child);
+			}
     	}
     	return node;
+	}
+
+	// Visita a regra identifierList: identifier (COMMA identifier)*
+	@Override
+	public AST visitVariableDeclaration(VariableDeclarationContext ctx) {
+		visit(ctx.type_());
+		return newVar(ctx.identifierList().identifier(0).IDENT().getSymbol());
 	}
 
 	// Visita a regra compoundStatement: BEGIN statements END
@@ -194,14 +205,6 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 	// public AST visitIdentifier(IdentifierContext ctx) {
 	// 	return checkVar(ctx.IDENT().getSymbol());
 	// }
-
-	// Visita a regra identifierList: identifier (COMMA identifier)*
-	@Override
-	public AST visitVariableDeclaration(VariableDeclarationContext ctx) {
-		visit(ctx.type_());
-		return newVar(ctx.identifierList().identifier(0).IDENT().getSymbol());
-		// return null;
-	}
 
     @Override
 	// Visita a regra unsignedConstant: string
