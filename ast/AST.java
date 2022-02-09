@@ -84,12 +84,16 @@ public class AST {
 	        }
 	    }
 	    System.err.printf("\"];\n");
-
+		
 	    for (int i = 0; i < this.children.size(); i++) {
-	        int childNr = this.children.get(i).printNodeDot();
+			if (this.children.get(i) == null) {
+				return myNr;
+			}
+			int childNr = this.children.get(i).printNodeDot();
 	        System.err.printf("node%d -> node%d;\n", myNr, childNr);
 	    }
-	    return myNr;
+
+		return myNr;
 	}
 
 	// Imprime a árvore toda em stderr.

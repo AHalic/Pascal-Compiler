@@ -30,7 +30,7 @@ public class Main {
         SemanticChecker checker = new SemanticChecker();
         checker.visit(tree);
         checker.printTables();
-        // checker.printAST();
+        checker.printAST();
 
         System.out.println("PARSE SUCCESSFUL!");
     }

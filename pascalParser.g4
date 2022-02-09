@@ -91,8 +91,8 @@ constant
    ;
 
 unsignedNumber
-   : unsignedInteger
-   | unsignedReal
+   : unsignedInteger    # exprIntegerVal
+   | unsignedReal       # exprRealVal
    ;
 
 unsignedInteger
@@ -109,8 +109,8 @@ sign
    ;
 
 bool_
-   : TRUE
-   | FALSE
+   : TRUE   # exprTrue
+   | FALSE  # exprFalse
    ;
 
 string
@@ -308,7 +308,7 @@ statement
 
 unlabelledStatement
    : simpleStatement
-   | structuredStatement
+   | structuredStatement      
    ;
 
 simpleStatement

@@ -11,13 +11,13 @@ CLASS_PATH_OPTION="-cp .:$ANTLR_PATH"
 
 rm -rf $OUT
 mkdir $OUT
-for infile in `ls $IN/*.pas`; do
+for infile in `ls $IN/c*.pas`; do
     base=$(basename $infile)
     outfile=$OUT/${base/.pas/.out}
-    # dotfile=$OUT/${base/.pas/.dot}
-    # pdffile=$OUT/${base/.pas/.pdf}
+    dotfile=$OUT/${base/.pas/.dot}
+    pdffile=$OUT/${base/.pas/.pdf}
     echo Running $base
-    # java $CLASS_PATH_OPTION:bin checker/Main $infile 1> $outfile 2> $dotfile
-    java $CLASS_PATH_OPTION:bin checker/Main $infile 1> $outfile
-    # dot -Tpdf $dotfile -o $pdffile
+    java $CLASS_PATH_OPTION:bin checker/Main $infile 1> $outfile 2> $dotfile
+    # java $CLASS_PATH_OPTION:bin checker/Main $infile 1> $outfile
+    dot -Tpdf $dotfile -o $pdffile
 done
