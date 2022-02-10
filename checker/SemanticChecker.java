@@ -10,6 +10,8 @@ import static ast.NodeKind.ASSIGN_NODE;
 import static ast.NodeKind.BOOL_VAL_NODE;
 import static ast.NodeKind.BLOCK_NODE;
 import static ast.NodeKind.INT_VAL_NODE;
+import static ast.NodeKind.MINUS_NODE;
+import static ast.NodeKind.PLUS_NODE;
 import static ast.NodeKind.PROGRAM_NODE;
 import static ast.NodeKind.STR_VAL_NODE;
 import static ast.NodeKind.REAL_VAL_NODE;
@@ -29,6 +31,7 @@ import parser.pascalParser.ExprTrueContext;
 import parser.pascalParser.IdentifierContext;
 import parser.pascalParser.IdentifierListContext;
 import parser.pascalParser.ProgramContext;
+import parser.pascalParser.SimpleExpressionContext;
 import parser.pascalParser.SimpleStatementContext;
 import parser.pascalParser.StructuredStatementContext;
 import parser.pascalParser.VariableDeclarationContext;
@@ -257,6 +260,45 @@ public class SemanticChecker extends pascalParserBaseVisitor<AST> {
 		AST idNode = checkVar(idToken);
 		// Faz as verificações de tipos.
 		return checkAssign(idToken.getLine(), idNode, exprNode);
+	}
+
+	// Visita a regra simpleExpression: term (additiveoperator simpleExpression)?;
+	@Override
+	public AST visitSimpleExpression(SimpleExpressionContext ctx) {
+
+		if (ctx.additiveoperator() != null &&
+		   (ctx.additiveoperator().getText().equals("+") || ctx.additiveoperator().getText().equals("-"))) {
+
+			AST l = visit(ctx.term());
+			AST r = visit(ctx.simpleExpression());
+
+			Type lt = l.type;
+			Type rt = r.type;
+			Unif unif;
+
+			if (ctx.additiveoperator().getText().equals("+")) {
+				unif = lt.unifyPlus(rt);
+			} else {
+				unif = lt.unifyOtherArith(rt);
+			}
+
+			if (unif.type == NO_TYPE) {
+				// Type error pra ser feito
+				//typeError(1, "erro", lt, rt);
+			}
+
+			l = Conv.createConvNode(unif.lc, l);
+			r = Conv.createConvNode(unif.rc, r);
+
+			if (ctx.additiveoperator().getText().equals("+")) {
+				return AST.newSubtree(PLUS_NODE, unif.type, l, r);
+			} else {
+				return AST.newSubtree(MINUS_NODE, unif.type, l, r);
+			}
+
+		} else {
+			return super.visitSimpleExpression(ctx);
+		}		
 	}
 
 	// Visita a regra bool_: TRUE
