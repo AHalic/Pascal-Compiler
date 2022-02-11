@@ -1,6 +1,8 @@
 .DS_STORE
 src/parser
+/parser
 bin
 out
 *.dot
 *.pdf
+/.antlr
