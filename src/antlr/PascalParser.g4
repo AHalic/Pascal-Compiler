@@ -30,10 +30,10 @@ Adapted from pascal.g by  Hakki Dogusan, Piet Schoutteten and Marton Papp
 */
 
 
-parser grammar pascalParser;
+parser grammar PascalParser;
 
 options {
-    tokenVocab = pascalLexer; // Indica que os tokens estão na "lexer grammar".
+    tokenVocab = PascalLexer; // Indica que os tokens estão na "lexer grammar".
 }
 
 @header {
@@ -319,7 +319,8 @@ simpleStatement
    ;
 
 assignmentStatement
-   : variable ASSIGN expression
+   : variable ASSIGN variable // Modificado
+   | variable ASSIGN expression
    ;
 
 variable
@@ -345,8 +346,7 @@ simpleExpression
    ;
 
 additiveoperator
-   : PLUS
-   | MINUS
+   : operator=(PLUS | MINUS) // Modificado
    | OR
    ;
 

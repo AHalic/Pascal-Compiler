@@ -1,36 +1,35 @@
 JAVA=java
 JAVAC=javac
 
-ROOT=/usr/local/lib
+# Paths
+MAIN_PATH=src
+GEN_PATH=src/parser
+BIN_PATH=bin
+ANTLR_PATH=./lib/antlr-4.9.3-complete.jar
 
-ANTLR_PATH=$(ROOT)/antlr-4.9-complete.jar
-CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
-
+# Antlr settings
 ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
 GRUN=$(JAVA) $(CLASS_PATH_OPTION) org.antlr.v4.gui.TestRig
-
-GEN_PATH=parser
-
-MAIN_PATH=checker
-
-BIN_PATH=bin
+CLASS_PATH_OPTION=-cp .:$(ANTLR_PATH)
 
 IN=examples
 OUT=./out
 
 all: antlr javac
-	@echo "Done."
+	@echo "Done!"
 
-antlr: pascalLexer.g4 pascalParser.g4
-	$(ANTLR4) -no-listener -visitor -o $(GEN_PATH) pascalLexer.g4 pascalParser.g4
+antlr: src/antlr/PascalLexer.g4 src/antlr/PascalParser.g4
+	@echo "Generating lexer and parser..."
+	$(ANTLR4) -no-listener -visitor -o $(GEN_PATH) src/antlr/PascalLexer.g4 src/antlr/PascalParser.g4 -Xexact-output-dir
 
 javac:
-	rm -rf $(BIN_PATH)
-	mkdir $(BIN_PATH)
-	$(JAVAC) $(CLASS_PATH_OPTION) -d $(BIN_PATH) */*.java
+	@echo "Compiling compiler..."
+	@rm -rf $(BIN_PATH)
+	@mkdir $(BIN_PATH)
+	$(JAVAC) $(CLASS_PATH_OPTION) -d $(BIN_PATH) ./src/*/*.java ./src/*.java
 
 run:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) $(MAIN_PATH)/Main $(FILE)
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE)
 
 clean:
 	@rm -rf $(GEN_PATH) $(BIN_PATH) $(OUT)

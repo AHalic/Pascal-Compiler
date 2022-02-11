@@ -1,7 +1,6 @@
-build/
-compiler
 .DS_STORE
-parser
-.antlr
+src/parser
 bin
 out
+*.dot
+*.pdf

@@ -1,17 +1,25 @@
-program Hello;
+program Operators;
+
 var
-    inteiro: integer;
-    flutuante: real;
-    palavra: string;
-    verdadeiro: boolean;
-    
+    number0: integer;
+    number1: real;
+    flag: boolean;
+
 begin
-    inteiro := 5;
-    flutuante := 4.2;
-    palavra := ' stringstrong ';
-    verdadeiro := true;
-    write (inteiro);
-    write (flutuante);
-    write (palavra);
-    write (verdadeiro);
+    number0 := 1;
+    number1 := 3 - -2.0;
+    number1 := number0 + number1;
+
+    //number1 := 2.1;
+    //number1 := -3.0;
+    //number1 := number1 + number0;
+    
+    //flag := true;
+    //number1 := number1 + flag;
+
+    //flag := false;
+    //number1 := number1 + flag;
+
+    //flag := number0;
+
 end.
