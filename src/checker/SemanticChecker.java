@@ -296,6 +296,10 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             return checkVariable(ctx.variable().identifier(0).IDENT().getSymbol());
         }
 
+        if (ctx.LPAREN() != null) {
+            return visitExpression(ctx.expression());
+        }
+
         return super.visitFactor(ctx);
     }
 
