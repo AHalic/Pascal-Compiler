@@ -101,7 +101,7 @@ public class AST {
 
     @Override
     public String toString() {
-        String text = "AST[ KIND=" + kind + ", TYPE=" + type + ", VALUE=";
+        String text = "AST [KIND=" + kind + ", TYPE=" + type + ", VALUE=";
         
         if (type == INT_TYPE) {
             text += intData + "]";

@@ -262,12 +262,63 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     @Override
+    public AST visitExpression(ExpressionContext ctx) {
+        if (ctx.expression() != null) {
+            AST left = visit(ctx.simpleExpression());
+            AST right = visit(ctx.expression());
+
+            //
+            Type leftType = left.type;
+            Type rightType = right.type;
+            Unified unified = leftType.unifyComp(rightType);
+
+            if (unified.type == NO_TYPE) {
+                typeError(
+                    ctx.relationaloperator().operator.getLine(),
+                    ctx.relationaloperator().operator.getText(),
+                    leftType, rightType);
+            }
+
+            left = Conversion.createConversionNode(unified.leftConversion, left);
+            right = Conversion.createConversionNode(unified.rightConversion, right);
+
+            return relationalNode(
+                ctx.relationaloperator().operator,
+                unified, left, right);
+        }
+
+        return super.visitExpression(ctx);
+    }
+
+    @Override
     public AST visitFactor(FactorContext ctx) {
         if (ctx.variable() != null) {
             return checkVariable(ctx.variable().identifier(0).IDENT().getSymbol());
         }
 
         return super.visitFactor(ctx);
+    }
+
+    private AST relationalNode(Token operator, Unified unified, AST left, AST right) {
+        switch (operator.getType()) {
+            case PascalParser.EQUAL:
+                return AST.newSubtree(EQ_NODE, unified.type, left, right);
+            case PascalParser.LT:
+                return AST.newSubtree(LT_NODE, unified.type, left, right);
+            case PascalParser.LE:
+                return AST.newSubtree(LE_NODE, unified.type, left, right);
+            case PascalParser.GE:
+                return AST.newSubtree(GE_NODE, unified.type, left, right);
+            case PascalParser.GT:
+                return AST.newSubtree(GT_NODE, unified.type, left, right);
+            case PascalParser.NOT_EQUAL:
+                return AST.newSubtree(NOT_EQUAL_NODE, unified.type, left, right);
+            default:
+                String message = String.format(
+                    "%line %d: invalid operator '%s'.\n",
+                    operator.getLine(), operator.getText());
+                throw new SemanticException(message);
+        }
     }
 
     public void printAST() {
