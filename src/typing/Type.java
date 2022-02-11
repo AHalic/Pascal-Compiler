@@ -62,7 +62,7 @@ public enum Type {
     private static Unified comp[][] = {
         { new Unified(BOOL_TYPE, NONE, NONE), new Unified(BOOL_TYPE, INT2REAL, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE) },
         { new Unified(BOOL_TYPE, NONE, INT2REAL), new Unified(BOOL_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE) },
-        { new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE)   },
+        { new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(BOOL_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE)   },
         { new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(BOOL_TYPE, NONE, NONE) }
     };
 

@@ -351,20 +351,16 @@ simpleExpression
    ;
 
 additiveoperator
-   : operator=(PLUS | MINUS) // Modificado
-   | OR
+   : operator=(PLUS | MINUS | OR) // Modificado
    ;
 
 term
    : signedFactor (multiplicativeoperator term)?
    ;
 
+// TODO: Pode dar problema.
 multiplicativeoperator
-   : STAR
-   | SLASH
-   | DIV
-   | MOD
-   | AND
+   : operator=(STAR | SLASH | DIV | MOD | AND)
    ;
 
 signedFactor

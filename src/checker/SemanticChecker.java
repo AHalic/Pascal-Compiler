@@ -215,18 +215,24 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return null;
     }
 
+    // Visita a regra de operadores aditivos
     @Override
     public AST visitSimpleExpression(SimpleExpressionContext ctx) {
         if (ctx.additiveoperator() != null) {
             AST left = visit(ctx.term());
             AST right = visit(ctx.simpleExpression());
+            Unified unified = null;
 
-            Unified unified;
-
-            if (ctx.additiveoperator().operator.getType() == PascalParser.PLUS) {
-                unified = left.type.unifyPlus(right.type);
-            } else {
-                unified = left.type.unifyOtherArith(right.type);
+            switch (ctx.additiveoperator().operator.getType()) {
+                case PascalParser.PLUS:
+                    unified = left.type.unifyPlus(right.type);
+                    break;
+                case PascalParser.OR:
+                    unified = left.type.unifyComp(right.type);
+                    break;
+                case PascalParser.MINUS:
+                    unified = left.type.unifyOtherArith(right.type);
+                    break;
             }
 
             //
@@ -240,14 +246,61 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             left = Conversion.createConversionNode(unified.leftConversion, left);
             right = Conversion.createConversionNode(unified.rightConversion, right);
 
-            if (ctx.additiveoperator().operator.getType() == PascalParser.PLUS) {
-                return AST.newSubtree(PLUS_NODE, unified.type, left, right);
-            } else { // MINUS
-                return AST.newSubtree(MINUS_NODE, unified.type, left, right);
+            switch (ctx.additiveoperator().operator.getType()) {
+                case PascalParser.PLUS:
+                    return AST.newSubtree(PLUS_NODE, unified.type, left, right);
+                case PascalParser.MINUS:
+                    return AST.newSubtree(MINUS_NODE, unified.type, left, right);
+                case PascalParser.OR:
+                    return AST.newSubtree(OR_NODE, unified.type, left, right);
             }
         }
 
         return super.visitSimpleExpression(ctx);
+    }
+
+    // Visita a regra de operadores multiplicativos
+    @Override
+    public AST visitTerm(TermContext ctx) {
+        if (ctx.multiplicativeoperator() != null) {
+            AST left = visit(ctx.signedFactor());
+            AST right = visit(ctx.term());
+            Unified unified = null;
+
+            switch (ctx.multiplicativeoperator().operator.getType()) {
+                case PascalParser.STAR:
+                case PascalParser.SLASH:
+                case PascalParser.DIV:
+                    unified = left.type.unifyPlus(right.type);
+                    break;
+                case PascalParser.AND:
+                    unified = left.type.unifyComp(right.type);
+                    break;
+            }
+
+            //
+            if (unified.type == NO_TYPE) {
+                typeError(
+                    ctx.multiplicativeoperator().operator.getLine(),
+                    ctx.multiplicativeoperator().operator.getText(),
+                    left.type, right.type);
+            }
+
+            left = Conversion.createConversionNode(unified.leftConversion, left);
+            right = Conversion.createConversionNode(unified.rightConversion, right);
+        
+            switch (ctx.multiplicativeoperator().operator.getType()) {
+                case PascalParser.STAR:
+                    return AST.newSubtree(TIMES_NODE, unified.type, left, right); 
+                case PascalParser.AND:
+                    return AST.newSubtree(AND_NODE, unified.type, left, right); 
+                case PascalParser.DIV:
+                case PascalParser.SLASH:
+                    return AST.newSubtree(OVER_NODE, unified.type, left, right); 
+            }
+        }
+
+        return super.visitTerm(ctx);
     }
 
     @Override

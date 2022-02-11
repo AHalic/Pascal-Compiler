@@ -101,6 +101,16 @@ public enum NodeKind {
             return "*";
         }
     },
+    AND_NODE {
+        public String toString() {
+            return "AND";
+        }
+    },
+    OR_NODE {
+        public String toString() {
+            return "OR";
+        }
+    },
     VAR_DECL_NODE {
         public String toString() {
             return "var_decl";
