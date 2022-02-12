@@ -31,5 +31,9 @@ javac:
 run:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE)
 
+run_dot:
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) 2> graph.dot
+	@dot -Tpng graph.dot -o graph.png
+
 clean:
 	@rm -rf $(GEN_PATH) $(BIN_PATH) $(OUT)

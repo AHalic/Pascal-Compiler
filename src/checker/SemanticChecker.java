@@ -5,6 +5,8 @@ import java.util.List;
 import ast.AST;
 import parser.PascalParser;
 import parser.PascalParserBaseVisitor;
+import tables.Function;
+import tables.FunctionTable;
 import tables.StringTable;
 import tables.VariableTable;
 import typing.Conversion;
@@ -20,6 +22,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     private StringTable stringTable = new StringTable();
     private VariableTable variableTable = new VariableTable();
+    private FunctionTable functionTable = new FunctionTable();
     
     //
     Type lastDeclaredType;
@@ -27,6 +30,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     AST root;
 
+    // Cria um nó de utilização de variável caso já tenha sido declarada
     public AST checkVariable(Token token) {
         String text = token.getText();
         int line = token.getLine();
@@ -42,6 +46,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return new AST(VAR_USE_NODE, idx, variableTable.getType(idx));
     }
 
+    // Cria uma nova variável caso ainda não tenha sido declarada
     public AST newVariable(Token token) {
         String text = token.getText();
         int line = token.getLine();
@@ -60,18 +65,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
     }
 
-    public void printTables() {
-        System.out.println();
-        System.out.println(stringTable);
-        System.out.println(variableTable);
-    }
-
+    //
     @Override
     public AST visitExprStrVal(ExprStrValContext ctx) {
         int idx = stringTable.add(ctx.string().getText());
         return new AST(STR_VAL_NODE, idx, STR_TYPE);
     }
 
+    //
     @Override
     public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
         AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
@@ -88,25 +89,34 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return node;
     }
 
+    //
     @Override
     public AST visitVariableDeclaration(VariableDeclarationContext ctx) {
         visit(ctx.type_());
         return newVariable(ctx.identifierList().identifier(0).IDENT().getSymbol());
     }
 
+    //
     @Override
     public AST visitProgram(ProgramContext ctx) {
         AST varsSect = null;
+        AST funcSect = AST.newSubtree(FUNC_LIST_NODE, NO_TYPE);
+
+        for (ProcedureAndFunctionDeclarationPartContext function :
+             ctx.block().procedureAndFunctionDeclarationPart()) {
+            funcSect.addChild(visit(function));
+        }
 
         if (ctx.block().variableDeclarationPart().size() > 0) {
             varsSect = visit(ctx.block().variableDeclarationPart(0));
         }
 
         AST stmtSect = visit(ctx.block().compoundStatement());
-        this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, varsSect, stmtSect);
+        this.root = AST.newSubtree(PROGRAM_NODE, NO_TYPE, varsSect, funcSect, stmtSect);
         return this.root;
     }
 
+    //
     @Override
     public AST visitAssignmentStatement(AssignmentStatementContext ctx) {
         if (ctx.variable().size() > 1) {
@@ -141,6 +151,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         }
     }
 
+    //
     private static AST checkAssign(int lineNo, AST l, AST r) {
         Type lt = l.type;
         Type rt = r.type;
@@ -167,12 +178,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return new AST(INT_VAL_NODE, intData, INT_TYPE);
     }
 
+    //
     @Override
     public AST visitExprRealVal(ExprRealValContext ctx) {
         float floatData = Float.parseFloat(ctx.getText());
         return new AST(REAL_VAL_NODE, floatData, REAL_TYPE);
     }
 
+    //
     @Override
     public AST visitSignedFactor(SignedFactorContext ctx) {
         AST exprNode = visit(ctx.factor());
@@ -188,11 +201,13 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return exprNode;
     }
 
+    //
     @Override
     public AST visitExprTrue(ExprTrueContext ctx) {
         return new AST(BOOL_VAL_NODE, 1, BOOL_TYPE);
     }
 
+    //
     @Override
     public AST visitExprFalse(ExprFalseContext ctx) {
         return new AST(BOOL_VAL_NODE, 0, BOOL_TYPE);
@@ -232,6 +247,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             AST right = visit(ctx.simpleExpression());
             Unified unified = null;
 
+            //
             switch (ctx.additiveoperator().operator.getType()) {
                 case PascalParser.PLUS:
                     unified = left.type.unifyPlus(right.type);
@@ -276,6 +292,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             AST right = visit(ctx.term());
             Unified unified = null;
 
+            //
             switch (ctx.multiplicativeoperator().operator.getType()) {
                 case PascalParser.STAR:
                 case PascalParser.SLASH:
@@ -312,6 +329,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return super.visitTerm(ctx);
     }
 
+    //
     @Override
     public AST visitCompoundStatement(CompoundStatementContext ctx) {
         AST node = AST.newSubtree(BLOCK_NODE, NO_TYPE);
@@ -323,6 +341,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return node;
     }
 
+    //
     @Override
     public AST visitExpression(ExpressionContext ctx) {
         if (ctx.expression() != null) {
@@ -352,6 +371,76 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return super.visitExpression(ctx);
     }
 
+    //
+    @Override
+    public AST visitProcedureAndFunctionDeclarationPart(
+        ProcedureAndFunctionDeclarationPartContext ctx) {
+            return super.visit(
+                ctx.procedureOrFunctionDeclaration()
+                   .functionDeclaration());
+        }
+
+    //
+    @Override
+    public AST visitFunctionDeclaration(FunctionDeclarationContext ctx) {
+        // Atualiza o tipo de retorno
+        visit(ctx.resultType());
+        Type functionType = lastDeclaredType;
+        
+        // Cria a função para inserir na tabela
+        int idx = this.functionTable.put(new Function(
+            ctx.identifier().getText(),
+            ctx.identifier().IDENT().getSymbol().getLine(),
+            functionType));
+            
+        // cria o nó da função
+        AST funcNode = AST.ASTWithFunctionScope(FUNCTION_NODE, idx, functionType);
+        AST varsSect = null;
+
+        // Verifica se existe parâmetros
+        if (ctx.formalParameterList() != null) {
+            // Tem parâmetros, visita a ávore os buscando
+            varsSect = visit(ctx.formalParameterList());
+        } else {
+            // Não tem parâmetros, apenas insere a variável da função
+            varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
+            idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
+            varsSect.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
+        }
+
+        AST stmtSect = visit(ctx.block().compoundStatement());
+        funcNode.addChild(varsSect);
+        funcNode.addChild(stmtSect);
+
+       return funcNode;
+    }
+
+    //
+    @Override
+    public AST visitFormalParameterList(FormalParameterListContext ctx) {
+        AST params = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
+
+        //
+        int idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
+        params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
+        
+        for (FormalParameterSectionContext context : ctx.formalParameterSection()) {
+            // Atualiza o lastDeclaredType
+            visit(context.parameterGroup().typeIdentifier());
+
+            // Salva cada declaracao de parâmetro
+            IdentifierListContext list = context.parameterGroup().identifierList();
+
+            for (IdentifierContext identifier : list.identifier()) {
+                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType);
+                params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
+            }
+        }
+
+        return params;
+    }
+
+    //
     @Override
     public AST visitFactor(FactorContext ctx) {
         if (ctx.variable() != null) {
@@ -365,25 +454,26 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return super.visitFactor(ctx);
     }
 
-    @Override // WHILE expression DO statement
+    //
+    @Override
     public AST visitWhileStatement(WhileStatementContext ctx){
-		// Analisa a expressão booleana.
-		AST exprNode = visit(ctx.expression());
-		checkBoolExpr(ctx.WHILE().getSymbol().getLine(), "while", exprNode.type);
-        
+        // Analisa a expressão booleana.
+        AST exprNode = visit(ctx.expression());
+        AST blockNode = null;
+        checkBoolExpr(ctx.WHILE().getSymbol().getLine(), "while", exprNode.type);
 
-		// Constrói o bloco de código do loop.
+        // Constrói o bloco de código do loop.
         if (ctx.statement().unlabelledStatement().structuredStatement() == null) {
-            AST blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+            blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
             blockNode.addChild(visit(ctx.statement().unlabelledStatement()));
+        } else {
+            blockNode = visit(ctx.statement().unlabelledStatement());
         }
-        else {
-            AST blockNode = visit(ctx.statement().unlabelledStatement());
-        }
-        return AST.newSubtree(REPEAT_NODE, NO_TYPE, blockNode, exprNode);
 
+        return AST.newSubtree(REPEAT_NODE, NO_TYPE, blockNode, exprNode);
     }
 
+    //
     private AST relationalNode(Token operator, Unified unified, AST left, AST right) {
         switch (operator.getType()) {
             case PascalParser.EQUAL:
@@ -406,7 +496,16 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         }
     }
 
+    //
     public void printAST() {
-        AST.printDot(root, variableTable);
+        AST.printDot(root, variableTable, functionTable);
+    }
+
+    // Imprime as tabelas no sdout
+    public void printTables() {
+        System.out.println();
+        System.out.println(stringTable);
+        System.out.println(variableTable);
+        System.out.println(functionTable);
     }
 }

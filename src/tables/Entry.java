@@ -3,9 +3,9 @@ package tables;
 import typing.Type;
 
 public class Entry {
-    private String name;
-    private int line;
-    private Type type;
+    protected String name;
+    protected int line;
+    protected Type type;
 
     public Entry(String name, int line, Type type) {
         this.name = name;

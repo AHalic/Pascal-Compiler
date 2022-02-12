@@ -7,3 +7,9 @@ out
 *.pdf
 src/.antlr
 src/antlr/.antlr
+/.antlr
+
+# Arquivos gerados pelo graphviz
+graph.png
+graph.pdf
+graph.dot
