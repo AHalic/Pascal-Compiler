@@ -5,6 +5,8 @@ bin
 out
 *.dot
 *.pdf
+src/.antlr
+src/antlr/.antlr
 /.antlr
 
 # Arquivos gerados pelo graphviz
