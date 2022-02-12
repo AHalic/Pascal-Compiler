@@ -21,9 +21,13 @@ import static typing.Conversion.*;
 public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     private StringTable stringTable = new StringTable();
-    private VariableTable variableTable = new VariableTable();
     private FunctionTable functionTable = new FunctionTable();
     
+    /* Cria a tabela de variáveis e o ponteiro para não ser preciso
+       diferenciar se a tabela é da função ou do programa. */
+    private VariableTable ProgramVariableTable = new VariableTable();
+    private VariableTable variableTable = ProgramVariableTable;
+
     //
     Type lastDeclaredType;
 
@@ -34,7 +38,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST checkVariable(Token token) {
         String text = token.getText();
         int line = token.getLine();
-        
+
         if (!variableTable.contains(text)) {
             String message = String.format(
                 "line %d: variable '%s' was not declared.\n",
@@ -119,6 +123,17 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     @Override
     public AST visitAssignmentStatement(AssignmentStatementContext ctx) {
+        if (ctx.expression().simpleExpression().term().signedFactor()
+                .factor().functionDesignator() != null) {
+            //
+            Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
+            // Token rightToken = ctx.expression().simpleExpression().term().signedFactor().factor().functionDesignator().identifier().IDENT().getSymbol();
+            AST leftNode = checkVariable(leftToken);
+            // AST rightNode = checkVariable(rightToken);
+            AST rightNode = visit(ctx.expression());
+            return checkAssign(leftToken.getLine(), leftNode, rightNode);
+        }
+        
         if (ctx.variable().size() > 1) {
             Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
             Token rightToken = ctx.variable(1).identifier(0).IDENT().getSymbol();
@@ -131,6 +146,24 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             AST idNode = checkVariable(idToken);
             return checkAssign(idToken.getLine(), idNode, exprNode);
         }
+    }
+
+    public AST visitFunctionDesignator(FunctionDesignatorContext ctx) {
+        String name = ctx.identifier().getText();
+        int line = ctx.identifier().IDENT().getSymbol().getLine();
+
+        VariableTable table = functionTable.getVariableTable(name);
+        AST node = AST.newSubtree(FUNC_USE_NODE, functionTable.getType(name), functionTable.getIndex(name));
+
+        //
+        List<ActualParameterContext> list = ctx.parameterList().actualParameter();
+
+        for (int i = 0; i < list.size(); i++) {
+            AST param = visit(list.get(i).expression().simpleExpression().term());
+            param = createConversionNode(table.getType(i + 1), param.type, param, line);
+            node.addChild(param);
+        }
+        return node;
     }
 
     //
@@ -151,22 +184,28 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         }
     }
 
-    //
-    private static AST checkAssign(int lineNo, AST l, AST r) {
-        Type lt = l.type;
-        Type rt = r.type;
-
+    private static AST createConversionNode(Type lt, Type rt, AST node, int lineNo) {
         if (lt == BOOL_TYPE && rt != BOOL_TYPE) typeError(lineNo, ":=", lt, rt);
         if (lt == STR_TYPE  && rt != STR_TYPE)  typeError(lineNo, ":=", lt, rt);
         if (lt == INT_TYPE  && rt != INT_TYPE)  typeError(lineNo, ":=", lt, rt);
 
         if (lt == REAL_TYPE) {
             if (rt == INT_TYPE) {
-                r = Conversion.createConversionNode(INT2REAL, r);
+                node = Conversion.createConversionNode(INT2REAL, node);
             } else if (rt != REAL_TYPE) {
                 typeError(lineNo, ":=", lt, rt);
             }
         }
+
+        return node;
+    }
+
+    //
+    private static AST checkAssign(int lineNo, AST l, AST r) {
+        Type lt = l.type;
+        Type rt = r.type;
+
+        r = createConversionNode(lt, rt, r, lineNo);
 
         return AST.newSubtree(ASSIGN_NODE, NO_TYPE, l, r);
     }
@@ -393,6 +432,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             ctx.identifier().IDENT().getSymbol().getLine(),
             functionType));
             
+        //
+        this.variableTable = this.functionTable.getVariableTable();
+
         // cria o nó da função
         AST funcNode = AST.ASTWithFunctionScope(FUNCTION_NODE, idx, functionType);
         AST varsSect = null;
@@ -411,6 +453,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         AST stmtSect = visit(ctx.block().compoundStatement());
         funcNode.addChild(varsSect);
         funcNode.addChild(stmtSect);
+
+        //
+        this.variableTable = this.ProgramVariableTable;
 
        return funcNode;
     }
@@ -449,6 +494,10 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         if (ctx.LPAREN() != null) {
             return visitExpression(ctx.expression());
+        }
+
+        if (ctx.unsignedConstant() != null) {
+            return visit(ctx.unsignedConstant());
         }
 
         return super.visitFactor(ctx);
