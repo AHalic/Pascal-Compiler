@@ -6,3 +6,8 @@ out
 *.dot
 *.pdf
 /.antlr
+
+# Arquivos gerados pelo graphviz
+graph.png
+graph.pdf
+graph.dot

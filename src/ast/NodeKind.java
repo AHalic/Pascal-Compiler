@@ -76,6 +76,16 @@ public enum NodeKind {
             return "program";
         }
     },
+    FUNC_LIST_NODE {
+        public String toString() {
+            return "func_list";
+        }
+    },
+    FUNCTION_NODE {
+        public String toString() {
+            return "function";
+        }
+    },
     READ_NODE {
         public String toString() {
             return "read";
