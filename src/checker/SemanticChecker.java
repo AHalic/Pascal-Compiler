@@ -1,6 +1,8 @@
 package checker;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.util.List;
 import ast.AST;
 import parser.PascalParser;
@@ -453,6 +455,58 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         return super.visitFactor(ctx);
     }
+
+    @Override // IF expression THEN statement (: ELSE statement)?
+	public AST visitIfStatement(IfStatementContext ctx) {
+		// Analisa a expressão booleana.
+        AST exprNode = visit(ctx.expression());
+        AST thenNode = null;
+        checkBoolExpr(ctx.IF().getSymbol().getLine(), "if", exprNode.type);
+
+        // System.out.println(ctx.statement());
+		if (ctx.ELSE() == null) {
+            // Constrói o bloco de código do loop.
+
+            if (ctx.statement(0).unlabelledStatement().structuredStatement() == null) {
+                thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+                thenNode.addChild(visit(ctx.statement(0).unlabelledStatement()));
+            } else {
+                thenNode = visit(ctx.statement(0).unlabelledStatement());
+            }
+
+            return AST.newSubtree(IF_NODE, NO_TYPE, thenNode, exprNode);
+		} 
+        else {
+			// Faz uma busca pelo token na lista de filhos.
+			TerminalNode elseToken = ctx.ELSE();
+			int elseIdx = -1;
+			// for (int i = 0; i < ctx.children.size(); i++) {
+			// 	if (ctx.children.get(i).equals(elseToken)) {
+			// 		elseIdx = i;
+			// 		break;
+			// 	}
+			// }
+            
+            if (ctx.statement(0).unlabelledStatement().structuredStatement() == null) {
+                thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+                thenNode.addChild(visit(ctx.statement(0).unlabelledStatement()));
+            } else {
+                thenNode = visit(ctx.statement(0).unlabelledStatement());
+            }
+
+			// Cria o nó com o bloco de comandos do ELSE.
+			AST elseNode = null;
+            
+            if (ctx.statement(1).unlabelledStatement().structuredStatement() == null) {
+                elseNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+                elseNode.addChild(visit(ctx.statement(1).unlabelledStatement()));
+            } else {
+                elseNode = visit(ctx.statement(1).unlabelledStatement());
+            }
+
+			return AST.newSubtree(IF_NODE, NO_TYPE, exprNode, thenNode, elseNode);
+		}
+	}
 
     //
     @Override
