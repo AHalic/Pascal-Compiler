@@ -132,6 +132,15 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         throw new SemanticException(message);
     }
 
+    // TODO: mandar msg pro exception
+    private static void checkBoolExpr(int lineNo, String cmd, Type t) {
+        if (t != BOOL_TYPE) {
+            System.out.printf("SEMANTIC ERROR (%d): conditional expression in '%s' is '%s' instead of '%s'.\n",
+               lineNo, cmd, t.toString(), BOOL_TYPE.toString());
+            System.exit(1);
+        }
+    }
+
     private static AST checkAssign(int lineNo, AST l, AST r) {
         Type lt = l.type;
         Type rt = r.type;
@@ -354,6 +363,25 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         }
 
         return super.visitFactor(ctx);
+    }
+
+    @Override // WHILE expression DO statement
+    public AST visitWhileStatement(WhileStatementContext ctx){
+		// Analisa a expressão booleana.
+		AST exprNode = visit(ctx.expression());
+		checkBoolExpr(ctx.WHILE().getSymbol().getLine(), "while", exprNode.type);
+        
+
+		// Constrói o bloco de código do loop.
+        if (ctx.statement().unlabelledStatement().structuredStatement() == null) {
+            AST blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
+            blockNode.addChild(visit(ctx.statement().unlabelledStatement()));
+        }
+        else {
+            AST blockNode = visit(ctx.statement().unlabelledStatement());
+        }
+        return AST.newSubtree(REPEAT_NODE, NO_TYPE, blockNode, exprNode);
+
     }
 
     private AST relationalNode(Token operator, Unified unified, AST left, AST right) {
