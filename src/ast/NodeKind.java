@@ -98,7 +98,7 @@ public enum NodeKind {
     },
     REPEAT_NODE {
         public String toString() {
-            return "repeat";
+            return "while";
         }
     },
     STR_VAL_NODE {
