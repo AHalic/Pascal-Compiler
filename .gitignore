@@ -5,4 +5,5 @@ bin
 out
 *.dot
 *.pdf
-/.antlr
+src/.antlr
+src/antlr/.antlr
