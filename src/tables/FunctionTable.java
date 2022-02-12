@@ -18,6 +18,15 @@ public final class FunctionTable extends HashMap<Integer, Function> {
         return this.get(index).getVariableTable();
     }
 
+    public VariableTable getVariableTable(String name) {
+        int idx = this.indexes.get(name);
+        return this.getVariableTable(idx);
+    }
+
+    public VariableTable getVariableTable() {
+        return this.getVariableTable(this.current - 1);
+    }
+
     public int addVarInLastFunction(String name, Type type) {
         return this.get(this.current - 1).addVariable(name, type);
     }
@@ -44,6 +53,11 @@ public final class FunctionTable extends HashMap<Integer, Function> {
 
     public Type getType(int index) {
         return this.get(index).getType();
+    }
+
+    public Type getType(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx).getType();
     }
 
     public String toString() {

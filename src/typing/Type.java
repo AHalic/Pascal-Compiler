@@ -44,10 +44,10 @@ public enum Type {
 
     //
     private static Unified plus[][] ={
-        { new Unified(INT_TYPE, NONE, NONE), new Unified(REAL_TYPE, INT2REAL, NONE), new Unified(INT_TYPE, NONE, BOOL2INT), new Unified(STR_TYPE, INT2STRING, NONE) },
-        { new Unified(REAL_TYPE, NONE, INT2REAL), new Unified(REAL_TYPE, NONE, NONE), new Unified(REAL_TYPE, NONE, BOOL2REAL), new Unified(STR_TYPE, REAL2STRING, NONE) },
-        { new Unified(INT_TYPE, BOOL2INT, NONE), new Unified(REAL_TYPE, BOOL2REAL, NONE), new Unified(BOOL_TYPE, NONE, NONE), new Unified(STR_TYPE, BOOL2STRING, NONE) },
-        { new Unified(STR_TYPE, NONE, INT2STRING), new Unified(STR_TYPE, NONE, REAL2STRING), new Unified(STR_TYPE, NONE, BOOL2STRING), new Unified(STR_TYPE, NONE, NONE) }
+        { new Unified(INT_TYPE, NONE, NONE), new Unified(REAL_TYPE, INT2REAL, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE) },
+        { new Unified(REAL_TYPE, NONE, INT2REAL), new Unified(REAL_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE) },
+        { new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE) },
+        { new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(NO_TYPE, NONE, NONE), new Unified(STR_TYPE, NONE, NONE) }
     };
 
     //

@@ -136,6 +136,11 @@ public enum NodeKind {
             return "var_use";
         }
     },
+    FUNC_USE_NODE {
+        public String toString() {
+            return "func_use";
+        }
+    },
     WRITE_NODE {
         public String toString() {
             return "write";
@@ -182,6 +187,7 @@ public enum NodeKind {
             case STR_VAL_NODE:
             case VAR_DECL_NODE:
             case VAR_USE_NODE:
+            case FUNC_USE_NODE:
                 return true;
             default:
                 return false;

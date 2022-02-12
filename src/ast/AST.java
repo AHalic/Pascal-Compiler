@@ -60,6 +60,16 @@ public class AST {
         return node;
     }
 
+    public static AST newSubtree(NodeKind kind, Type type, int functionId, AST... children) {
+        AST node = new AST(kind, functionId, type);
+
+        for (AST child: children) {
+            node.addChild(child);
+        }
+
+        return node;
+    }
+
     // Variáveis internas usadas para geração da saída em DOT.
     // Estáticas porque só precisamos de uma instância.
     private static int nr;
@@ -93,6 +103,8 @@ public class AST {
             } else {
                 System.err.printf("%s@", ft.get(functionID).getVariableTable().getName(this.intData));
             }
+        } if (this.kind == NodeKind.FUNC_USE_NODE) {
+            System.err.printf("%s", ft.get(this.intData).getName());
         } else {
             System.err.printf("%s", this.kind.toString());
         }
@@ -103,6 +115,8 @@ public class AST {
                 System.err.printf("%.2f", this.floatData);
             } else if (this.kind == NodeKind.STR_VAL_NODE) {
                 System.err.printf("@%d", this.intData);
+            } else if (this.kind == NodeKind.FUNC_USE_NODE) {
+                System.err.printf("@call", this.intData);
             } else {
                 System.err.printf("%d", this.intData);
             }

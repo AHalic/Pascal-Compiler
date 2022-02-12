@@ -1,16 +1,15 @@
-// Exemplo de programa usando loop aninhado sem block no externo
+// Exemplo de programa usando funções
 
-program whileLoop;
+program Functions;
+
+function Somar(add1, add2: real) : real;
+begin
+    Somar := add1 + add2;
+end;
+
 var
-   a: integer;
+   a: real;
 
 begin
-   a := 10;
-   while  a < 20  do
-    while a < 30 do
-        begin
-            a := a + 2;
-        end;
-   a := a + 1;
-   
+    a := Somar(1, 2.0);
 end.
