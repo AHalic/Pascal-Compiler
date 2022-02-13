@@ -8,6 +8,20 @@ public final class FunctionTable extends HashMap<Integer, Function> {
     private HashMap<String, Integer> indexes = new HashMap<String, Integer>();
     private int current = 0;
 
+    public FunctionTable() {
+        // Cria as funções built-in
+        Function write = new Function("write", -1, Type.NO_TYPE, true);
+        Function writeln = new Function("writeln", -1, Type.NO_TYPE, true);
+        Function read = new Function("read", -1, Type.NO_TYPE, true);
+        Function readln = new Function("readln", -1, Type.NO_TYPE, true);
+
+        // Registra as funções na tabela
+        this.put(write);
+        this.put(writeln);
+        this.put(read);
+        this.put(readln);
+    }
+
     public int put(Function function) {
         this.put(current, function);
         this.indexes.put(function.getName(), current);
@@ -67,9 +81,12 @@ public final class FunctionTable extends HashMap<Integer, Function> {
         formatter.format("Function table:\n");
 
         for (int i = 0; i < this.size(); i++) {
-            formatter.format(
+            // Não imprime as funções built-in
+            if (!get(i).builtIn) {
+                formatter.format(
                 "Function %d -- name: %s, line: %d, type: %s\n",
                 i, getName(i), getLine(i), getType(i).toString());
+            }
         }
 
         formatter.close();
