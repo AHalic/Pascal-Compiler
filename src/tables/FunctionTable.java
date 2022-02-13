@@ -18,6 +18,7 @@ public final class FunctionTable extends HashMap<Integer, List<Function>> {
        this.addBuiltInFunctionOverloaded("writeln");
        this.addBuiltInFunctionOverloaded("read");
        this.addBuiltInFunctionOverloaded("readln");
+       this.addBuiltIn("break", Type.NO_TYPE);
     }
 
     private void addBuiltInFunctionOverloaded(String name) {
@@ -25,10 +26,13 @@ public final class FunctionTable extends HashMap<Integer, List<Function>> {
         this.get(idx).get(0).addVariable("message", Type.STR_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(1).addVariable("message", Type.REAL_TYPE);
+        this.get(idx).get(1).addVariable("int_value", Type.INT_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(2).addVariable("message", Type.BOOL_TYPE);
+        this.get(idx).get(1).addVariable("real_value", Type.REAL_TYPE);
+        //
+        idx = this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).get(2).addVariable("boolean_value", Type.BOOL_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
     }

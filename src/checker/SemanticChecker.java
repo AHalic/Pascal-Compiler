@@ -16,6 +16,7 @@ import typing.Type;
 import static typing.Type.*;
 import parser.PascalParser.*;
 import static ast.NodeKind.*;
+import checker.Scope;
 
 import array.Array;
 import array.Range;
@@ -37,6 +38,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     Type lastDeclaredType;
     Range lastDeclaredRange;
     Array lastArrayDeclared;
+    Scope currentScope = Scope.PROGRAM;
 
     //
     AST root;
@@ -130,7 +132,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         Function function = functions.get(0);
         VariableTable table = function.getVariableTable();
 
-        // TODO:COMENTAR
         for (int j = 0; j < functions.size(); j++) {
             // Para se ambas não tiverem parâmetros
             if (list.size() == 0 && table.size() == 1) break;
@@ -166,11 +167,19 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             }
 
         // Verifica se os parâmetros estão certos
-        System.out.println(function);
         checkMissingParameters(list.size(), function, line);
         checkExtraParameters(list, table, line);
+        checkScope(name, line);
 
         return node;
+    }
+
+    //
+    private void checkScope(String name, int lineNo) {
+        if (name.equals("break") && this.currentScope != Scope.WHILE_SCOPE) {
+            throw new SemanticException(String.format(
+                "line %d: '%s' token out of loop scope.", lineNo, name));
+        }
     }
 
     // Visita o nó de criação de string
@@ -807,11 +816,15 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     //
     @Override
-    public AST visitWhileStatement(WhileStatementContext ctx){
+    public AST visitWhileStatement(WhileStatementContext ctx) {
         // Analisa a expressão booleana.
         AST exprNode = visit(ctx.expression());
         AST blockNode = null;
         checkBoolExpr(ctx.WHILE().getSymbol().getLine(), "while", exprNode.type);
+
+        // Troca de escopo
+        Scope lastScope = currentScope;
+        currentScope = Scope.WHILE_SCOPE;
 
         // Constrói o bloco de código do loop.
         if (ctx.statement().unlabelledStatement().structuredStatement() == null) {
@@ -820,6 +833,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         } else {
             blockNode = visit(ctx.statement().unlabelledStatement());
         }
+
+        // Volta para o escopo anterior
+        currentScope = lastScope;
 
         return AST.newSubtree(REPEAT_NODE, NO_TYPE, blockNode, exprNode);
     }
