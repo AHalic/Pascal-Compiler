@@ -41,6 +41,10 @@ public class AST {
         this.children.add(child);
     }
 
+    public int getChildrenQuantity() {
+        return this.children.size();
+    }
+
     // Retorna o filho no índice passado.
     // Não há nenhuma verificação de erros!
     public AST getChild(int idx) {
@@ -103,7 +107,7 @@ public class AST {
             } else {
                 System.err.printf("%s@", ft.get(functionID).getVariableTable().getName(this.intData));
             }
-        } if (this.kind == NodeKind.FUNC_USE_NODE) {
+        } else if (this.kind == NodeKind.FUNC_USE_NODE) {
             System.err.printf("%s", ft.get(this.intData).getName());
         } else {
             System.err.printf("%s", this.kind.toString());
@@ -116,7 +120,7 @@ public class AST {
             } else if (this.kind == NodeKind.STR_VAL_NODE) {
                 System.err.printf("@%d", this.intData);
             } else if (this.kind == NodeKind.FUNC_USE_NODE) {
-                System.err.printf("@call", this.intData);
+                System.err.printf("@%d", this.intData);
             } else {
                 System.err.printf("%d", this.intData);
             }
