@@ -1,9 +1,8 @@
 package checker;
 
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
 import java.util.List;
+import java.util.ArrayList;
 import ast.AST;
 import parser.PascalParser;
 import parser.PascalParserBaseVisitor;
@@ -16,6 +15,9 @@ import typing.Type;
 import static typing.Type.*;
 import parser.PascalParser.*;
 import static ast.NodeKind.*;
+
+import array.Array;
+import array.Range;
 
 import exception.SemanticException;
 import static typing.Conversion.*;
@@ -32,6 +34,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     //
     Type lastDeclaredType;
+    Range lastDeclaredRange;
+    Array lastArrayDeclared;
 
     //
     AST root;
@@ -63,7 +67,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST newVariable(Token token) {
         String text = token.getText();
         int line = token.getLine();
-        
+
         // Verifica se existe uma função com mesmo nome
         if (this.functionTable.contains(text)) {
             String message = String.format(
@@ -83,9 +87,16 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
             throw new SemanticException(message);
         }
-
-        int idx = variableTable.put(text, line, lastDeclaredType);
-        return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
+        
+        // Verifica se é uma array ou um tipo normal
+        if (lastDeclaredType == ARRAY_TYPE) {
+            lastArrayDeclared.setName(text);
+            int idx = variableTable.put(lastArrayDeclared);
+            return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
+        } else {
+            int idx = variableTable.put(text, line, lastDeclaredType);
+            return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
+        }
     }
 
     // Visita a chamada de função
@@ -350,6 +361,32 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     public AST visitBoolType(BoolTypeContext ctx) {
         this.lastDeclaredType = Type.BOOL_TYPE;
+        return null;
+    }
+
+    public AST visitArrayType(ArrayTypeContext ctx) {
+        visit(ctx.componentType().type_());
+        this.lastArrayDeclared = new Array(
+            "",
+            ctx.ARRAY().getSymbol().getLine(),
+            ARRAY_TYPE,
+            lastDeclaredType);
+
+        for (IndexTypeContext typeContext : ctx.typeList().indexType()) {
+            visit(typeContext);
+            lastArrayDeclared.addRange(lastDeclaredRange);
+        }
+        
+        this.lastDeclaredType = Type.ARRAY_TYPE;
+        return null;
+    }
+
+    // Visita o subrange e salva como o último intervalo
+    @Override
+    public AST visitIndexType(IndexTypeContext ctx) {
+        this.lastDeclaredRange = new Range(
+            Integer.parseInt(ctx.simpleType().subrangeType().constant(0).getText()),
+            Integer.parseInt(ctx.simpleType().subrangeType().constant(1).getText()));
         return null;
     }
 

@@ -31,6 +31,11 @@ public enum NodeKind {
             return "";
         }
     },
+    NIL_VAL_NODE {
+        public String toString() {
+            return "";
+        }
+    },
     LT_NODE {
         public String toString() {
             return "<";
@@ -86,11 +91,6 @@ public enum NodeKind {
             return "function";
         }
     },
-    READ_NODE {
-        public String toString() {
-            return "read";
-        }
-    },
     REAL_VAL_NODE {
         public String toString() {
             return "";
@@ -139,11 +139,6 @@ public enum NodeKind {
     FUNC_USE_NODE {
         public String toString() {
             return "func_use";
-        }
-    },
-    WRITE_NODE {
-        public String toString() {
-            return "write";
         }
     },
 

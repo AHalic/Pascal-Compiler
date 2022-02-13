@@ -4,6 +4,7 @@ import static typing.Type.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import array.Array;
 import tables.FunctionTable;
 import tables.VariableTable;
 import typing.Type;
@@ -88,25 +89,39 @@ public class AST {
         System.err.printf("node%d[label=\"", myNr);
 
         //
-        if (this.type != NO_TYPE) {
+        
+        if (this.type == ARRAY_TYPE) {
+            if (functionScope) {
+                System.err.printf("(%s_%s) ",
+                ft.getVariableTable(functionID).getType(intData),
+                ((Array)ft.getVariableTable(functionID).get(intData)).getComponentType());
+            } else {
+                System.err.printf("(%s_%s) ", vt.getType(intData), ((Array)vt.get(intData)).getComponentType());
+            }
+        } else if (this.type != NO_TYPE) {
             System.err.printf("(%s) ", this.type.toString());
         }
 
         //
-        if (!functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE)) {
-            System.err.printf("%s@", vt.getName(this.intData));
+        if (!functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE | this.kind == NodeKind.VAR_USE_NODE)) {
+
+            if (this.type == ARRAY_TYPE) {
+                System.err.printf("%s", vt.getName(this.intData));
+                System.err.printf("%s@", ((Array)vt.get(intData)).getRangeString());
+            } else {
+                System.err.printf("%s@", vt.getName(this.intData));
+            }
         } else if ((this.kind == NodeKind.FUNCTION_NODE) || 
                    (functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE))) {
             //
             functionScope = true;
-            
-            //
-            if (this.kind == NodeKind.FUNCTION_NODE) {
-                functionID = this.intData;
-                System.err.printf("%s@", ft.get(functionID).getVariableTable().getName(0));
+
+            if (this.type == ARRAY_TYPE) {
+                System.err.printf("%s@", ((Array)ft.getVariableTable(functionID).get(intData)).getRangeString());
             } else {
-                System.err.printf("%s@", ft.get(functionID).getVariableTable().getName(this.intData));
+                System.err.printf("@");
             }
+
         } else if (this.kind == NodeKind.FUNC_USE_NODE) {
             System.err.printf("%s", ft.get(this.intData).getName());
         } else {
