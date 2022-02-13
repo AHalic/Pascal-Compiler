@@ -1,40 +1,70 @@
 package tables;
 
 import java.util.HashMap;
+import java.util.List;
 import typing.Type;
+
+import java.sql.Time;
+import java.util.ArrayList;
 import java.util.Formatter;
 
-public final class FunctionTable extends HashMap<Integer, Function> {
+public final class FunctionTable extends HashMap<Integer, List<Function>> {
     private HashMap<String, Integer> indexes = new HashMap<String, Integer>();
     private int current = 0;
 
     public FunctionTable() {
         // Cria as funções built-in
-        // write, writeln
-        int idx = this.addBuiltIn("write", Type.NO_TYPE);
-        this.get(idx).addVariable("message", Type.STR_TYPE);
-        idx = this.addBuiltIn("writeln", Type.NO_TYPE);
-        this.get(idx).addVariable("message", Type.STR_TYPE);
-        // read, readln
-        idx = this.addBuiltIn("read", Type.NO_TYPE);
-        this.get(idx).addVariable("message", Type.STR_TYPE);
-        idx = this.addBuiltIn("readln", Type.NO_TYPE);
+       this.addBuiltInFunctionOverloaded("write");
+       this.addBuiltInFunctionOverloaded("writeln");
+       this.addBuiltInFunctionOverloaded("read");
+       this.addBuiltInFunctionOverloaded("readln");
+    }
+
+    private void addBuiltInFunctionOverloaded(String name) {
+        int idx = this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).get(0).addVariable("message", Type.STR_TYPE);
+        //
+        idx = this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).get(1).addVariable("message", Type.REAL_TYPE);
+        //
+        idx = this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).get(2).addVariable("message", Type.BOOL_TYPE);
+        //
+        idx = this.addBuiltIn(name, Type.NO_TYPE);
+    }
+
+    public Function get(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx).get(0); 
     }
 
     public int addBuiltIn(String name, Type type) {
         Function function = new Function(name, -1, type, true);
-        function.addVariable(name, type);
+        function.addVariable(name, type, false);
         return this.put(function);
     }
 
+    public int getParameterQuantity(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx).get(0).getParameterQuantity();
+    }
+
     public int put(Function function) {
-        this.put(current, function);
-        this.indexes.put(function.getName(), current);
-        return this.current++;
+        if (this.indexes.containsKey(function.getName())) {
+            int idx = this.indexes.get(function.getName());
+            this.get(idx).add(function);
+            return idx;
+        } else {
+            List<Function> list = new ArrayList<>();
+            list.add(function);
+            this.put(current, list);
+            this.indexes.put(function.getName(), current);
+            return this.current++;
+        }
     }
 
     public VariableTable getVariableTable(int index) {
-        return this.get(index).getVariableTable();
+        return this.get(index).get(0).getVariableTable();
     }
 
     public VariableTable getVariableTable(String name) {
@@ -47,7 +77,11 @@ public final class FunctionTable extends HashMap<Integer, Function> {
     }
 
     public int addVarInLastFunction(String name, Type type) {
-        return this.get(this.current - 1).addVariable(name, type);
+        return this.get(this.current - 1).get(0).addVariable(name, type);
+    }
+
+    public int addVarInLastFunction(String name, Type type, boolean param) {
+        return this.get(this.current - 1).get(0).addVariable(name, type, param);
     }
 
     public int getIndex(String string) {
@@ -59,7 +93,7 @@ public final class FunctionTable extends HashMap<Integer, Function> {
     }
 
     public String getName(int index) {
-        return this.get(index).getName();
+        return this.get(index).get(0).getName();
     }
 
     public String getName() {
@@ -67,16 +101,22 @@ public final class FunctionTable extends HashMap<Integer, Function> {
     }
 
     public int getLine(int index) {
-        return this.get(index).getLine();
+        return this.get(index).get(0).getLine();
     }
 
     public Type getType(int index) {
-        return this.get(index).getType();
+        return this.get(index).get(0).getType();
     }
 
     public Type getType(String name) {
         int idx = this.indexes.get(name);
-        return this.get(idx).getType();
+        return this.get(idx).get(0).getType();
+    }
+
+
+    public List<Function> getOverloadedFunctions(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx);
     }
 
     public String toString() {
@@ -87,7 +127,7 @@ public final class FunctionTable extends HashMap<Integer, Function> {
 
         for (int i = 0; i < this.size(); i++) {
             // Não imprime as funções built-in
-            if (!get(i).builtIn) {
+            if (!get(i).get(0).builtIn) {
                 formatter.format(
                 "Function %d -- name: %s, line: %d, type: %s\n",
                 i, getName(i), getLine(i), getType(i).toString());

@@ -43,6 +43,10 @@ public class AST {
         this.children.add(child);
     }
 
+    public void clear() {
+        this.children.clear();
+    }
+
     public int getChildrenQuantity() {
         return this.children.size();
     }
@@ -132,7 +136,7 @@ public class AST {
                 System.err.printf("@");
             }
         } else if (this.kind == NodeKind.FUNC_USE_NODE) {
-            System.err.printf("%s", ft.get(this.intData).getName());
+            System.err.printf("%s", ft.get(this.intData).get(0).getName());
         } else {
             System.err.printf("%s", this.kind.toString());
         }

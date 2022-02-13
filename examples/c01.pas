@@ -1,8 +1,9 @@
 program HelloWorld;
 
 begin
-    write('Hello World 1.');
-    write('Hello World 2.');
-    write('Hello World 3.');
+    write('Hello World');
+    write(1);
+    write(1.0);
+    write(true);
     readln;
 end.

@@ -2,6 +2,7 @@ package checker;
 
 import org.antlr.v4.runtime.Token;
 import java.util.List;
+
 import java.util.ArrayList;
 import ast.AST;
 import parser.PascalParser;
@@ -99,7 +100,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         String name = ctx.identifier().IDENT().getSymbol().getText();
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
-        VariableTable table = functionTable.getVariableTable(name);
 
         // Verifica se a função existe na tabela
         if (!functionTable.contains(name)) {
@@ -121,16 +121,54 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             functionTable.getType(name),
             functionTable.getIndex(name));
 
-        // Verifica se os parâmetros estão certos
-        checkMissingParameters(list.size(), table, line);
-        checkExtraParameters(list, table, line);
+        /* Variáveis para buscar se existe alguma função válida que possui
+           dentro da lista de funções de nome "name". Na prática, apenas
+           funções built-in terão sobrecarga. */
+        boolean validFunction = false;
+        List<Function> functions = this.functionTable.getOverloadedFunctions(name);
+        List<Type> types = new ArrayList<>();
+        Function function = functions.get(0);
+        VariableTable table = function.getVariableTable();
 
-        // Insere todos parâmetros no nó de chamada de função
-        for (int i = 0; i < list.size(); i++) {
-            AST param = visit(list.get(i).expression().simpleExpression().term());
-            param = createConversionNode(table.getType(i + 1), param.type, param, line);
-            node.addChild(param);
-        }
+        // TODO:COMENTAR
+        for (int j = 0; j < functions.size(); j++) {
+            // Para se ambas não tiverem parâmetros
+            if (list.size() == 0 && table.size() == 1) break;
+
+            try {
+                for (int i = 0; i < list.size(); i++) {
+                        // Insere todos parâmetros no nó de chamada de função
+                        AST param = visit(list.get(i).expression().simpleExpression().term());
+                        param = createConversionNode(table.getType(i + 1), param.type, param, line);
+                        types.add(param.type);
+                        node.addChild(param);
+                        //
+                        if (i == list.size() - 1) validFunction = true;
+                    }
+                } catch (SemanticException error) {
+                    /* Função errada, limpa o nó de variáveis. Limpa apenas se tiver
+                       mais uma para ler, para manter sempre o último parâmetro salvo. */
+                    if (j + 1 != functions.size() - 1) {
+                        node.clear();
+                        types.clear();
+                    } else {
+                        throw error;
+                    }
+                }
+
+                //
+                if ((validFunction)) break;
+
+                if (j + 1 < functions.size() - 1) {
+                    function = functions.get(j + 1);
+                    table = function.getVariableTable();
+                }
+            }
+
+        // Verifica se os parâmetros estão certos
+        System.out.println(function);
+        checkMissingParameters(list.size(), function, line);
+        checkExtraParameters(list, table, line);
 
         return node;
     }
@@ -283,7 +321,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             functionTable.getIndex(name));
 
         // Verifica se os parâmetros estão certos
-        checkMissingParameters(list.size(), table, line);
+        // checkMissingParameters(list.size(), table, functionTable.getParameterQuantity(name), line);
+        checkMissingParameters(list.size(), functionTable.get(name), line);
         checkExtraParameters(list, table, line);
 
         // Insere todos parâmetros no nó de chamada de função
@@ -313,8 +352,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     // Verifica se esta faltando parâmetros
-    void checkMissingParameters(int quantity, VariableTable table, int lineNo) {
-        if (quantity < table.size() - 1) {
+    void checkMissingParameters(int quantity, Function function, int lineNo) {
+        if (quantity < function.getParameterQuantity()) {
+            VariableTable table = function.getVariableTable();
             int nextParamID = quantity + 1;
 
             String message = String.format(
@@ -697,7 +737,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             IdentifierListContext list = context.parameterGroup().identifierList();
 
             for (IdentifierContext identifier : list.identifier()) {
-                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType);
+                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType, true);
                 params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
             }
         }
