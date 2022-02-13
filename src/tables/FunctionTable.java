@@ -10,16 +10,20 @@ public final class FunctionTable extends HashMap<Integer, Function> {
 
     public FunctionTable() {
         // Cria as funções built-in
-        Function write = new Function("write", -1, Type.NO_TYPE, true);
-        Function writeln = new Function("writeln", -1, Type.NO_TYPE, true);
-        Function read = new Function("read", -1, Type.NO_TYPE, true);
-        Function readln = new Function("readln", -1, Type.NO_TYPE, true);
+        // write, writeln
+        int idx = this.addBuiltIn("write", Type.NO_TYPE);
+        this.get(idx).addVariable("message", Type.STR_TYPE);
+        idx = this.addBuiltIn("writeln", Type.NO_TYPE);
+        this.get(idx).addVariable("message", Type.STR_TYPE);
+        // read, readln
+        idx = this.addBuiltIn("read", Type.NO_TYPE);
+        idx = this.addBuiltIn("readln", Type.NO_TYPE);
+    }
 
-        // Registra as funções na tabela
-        this.put(write);
-        this.put(writeln);
-        this.put(read);
-        this.put(readln);
+    public int addBuiltIn(String name, Type type) {
+        Function function = new Function(name, -1, type, true);
+        function.addVariable(name, type);
+        return this.put(function);
     }
 
     public int put(Function function) {

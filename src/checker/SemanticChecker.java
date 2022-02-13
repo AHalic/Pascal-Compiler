@@ -98,29 +98,51 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST visitProcedureStatement(ProcedureStatementContext ctx) {
         String name = ctx.identifier().IDENT().getSymbol().getText();
         int line = ctx.identifier().IDENT().getSymbol().getLine();
+        List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
+        VariableTable table = functionTable.getVariableTable(name);
 
         // Verifica se a função existe na tabela
         if (!functionTable.contains(name)) {
             String message = String.format(
                 "line %d: undeclared function '%s'.",
                 line, name);
-            throw new SemanticException(message);
+                throw new SemanticException(message);
+            }
+        
+        // Verifica se existe parâmetros
+        if ((ctx.parameterList() != null) && 
+            (ctx.parameterList().actualParameter() != null)) {
+            list = ctx.parameterList().actualParameter();
         }
 
-        return AST.newSubtree(
+        // Árvore de chamada de função
+        AST node = AST.newSubtree(
             FUNC_USE_NODE,
             functionTable.getType(name),
             functionTable.getIndex(name));
+
+        // Verifica se os parâmetros estão certos
+        checkMissingParameters(list.size(), table, line);
+        checkExtraParameters(list, table, line);
+
+        // Insere todos parâmetros no nó de chamada de função
+        for (int i = 0; i < list.size(); i++) {
+            AST param = visit(list.get(i).expression().simpleExpression().term());
+            param = createConversionNode(table.getType(i + 1), param.type, param, line);
+            node.addChild(param);
+        }
+
+        return node;
     }
 
-    //
+    // Visita o nó de criação de string
     @Override
     public AST visitExprStrVal(ExprStrValContext ctx) {
         int idx = stringTable.add(ctx.string().getText());
         return new AST(STR_VAL_NODE, idx, STR_TYPE);
     }
 
-    //
+    // Visita o nó de declaração de variável
     @Override
     public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
         AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
@@ -137,7 +159,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return node;
     }
 
-    //
+    // Visita o nó de de declaração de variável
     @Override
     public AST visitVariableDeclaration(VariableDeclarationContext ctx) {
         visit(ctx.type_());
@@ -164,12 +186,59 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return this.root;
     }
 
+    @Override
+    public AST visitVariable(VariableContext ctx) {
+        if (ctx.LBRACK(0) != null) {
+            Array array = (Array)(variableTable.get(ctx.identifier(0).getText()));
+            AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
+            int line = ctx.identifier(0).IDENT().getSymbol().getLine();
+            String name = ctx.identifier(0).IDENT().getSymbol().getText();
+
+            // Adiciona o array como primeiro elemento do subscription
+            node.addChild(
+                new AST(
+                    VAR_USE_NODE,
+                    variableTable.getIndex(array.getName()),
+                    ARRAY_TYPE)
+                );
+            
+            // Adiciona os índices como elementos do subscription
+            int subscriptionQuantity = 0;
+
+            for (ExpressionContext range : ctx.expression()) {
+                node.addChild(visit(range));
+                subscriptionQuantity++;
+            }
+
+            // Verifica se a quantidade de íncide esta correta
+            if (subscriptionQuantity != array.getDimensionSize()) {
+                String message = String.format(
+                    "line %d: inconsistent number of indices for array '%s'," +
+                    " informed %d indices being necessary %d.",
+                    line, name, subscriptionQuantity, array.getDimensionSize());
+                throw new SemanticException(message);
+            }
+            
+            return node;
+        }
+
+        return super.visitVariable(ctx);
+    }
+
     //
     @Override
     public AST visitAssignmentStatement(AssignmentStatementContext ctx) {
+        //
+        if ((ctx.variable() != null) && ctx.variable(0).LBRACK(0) != null) {
+            Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
+            AST leftNode = visit(ctx.variable(0));
+            AST rightNode = visit(ctx.expression());
+            return checkAssign(leftToken.getLine(), leftNode, rightNode);
+        }
+
         // Verifica se é uma utilização de função
         if ((ctx.expression() != null) &&
-            (ctx.expression().simpleExpression().term().signedFactor().factor().functionDesignator() != null)) {
+        (ctx.expression().simpleExpression().term().signedFactor().factor().functionDesignator() != null)) {
             Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
             AST leftNode = checkVariable(leftToken);
             AST rightNode = visit(ctx.expression());
@@ -179,9 +248,17 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         // Verifica se esta atribuindo uma variável ou se é um valor
         if (ctx.variable().size() > 1) {
             Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
-            Token rightToken = ctx.variable(1).identifier(0).IDENT().getSymbol();
+            AST rightNode;
             AST leftNode = checkVariable(leftToken);
-            AST rightNode = checkVariable(rightToken);
+            
+            // Verifica se esta acessando um valor dentro de um vetor
+            if (ctx.variable(1).LBRACK(0) != null) {
+                rightNode = visit(ctx.variable(1));
+            } else {
+                Token rightToken = ctx.variable(1).identifier(0).IDENT().getSymbol();
+                rightNode = checkVariable(rightToken);
+            }
+
             return checkAssign(leftToken.getLine(), leftNode, rightNode);
         } else {
             AST exprNode = visit(ctx.expression());
@@ -205,7 +282,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         // Verifica se os parâmetros estão certos
         checkMissingParameters(list.size(), table, line);
-        checkExtraParameters(list.size(), list, table, line);
+        checkExtraParameters(list, table, line);
 
         // Insere todos parâmetros no nó de chamada de função
         for (int i = 0; i < list.size(); i++) {
@@ -219,11 +296,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     // Verifica se foi informado mais parâmetros do que o necessário
     void checkExtraParameters(
-            int parametersQuantity, List<ActualParameterContext> list,
-            VariableTable table, int lineNo) {
+        List<ActualParameterContext> list,
+        VariableTable table, int lineNo) {
         //
-        if (parametersQuantity > table.size() - 1) {
-            int nextParamID = parametersQuantity - 1;
+        if (list.size() > table.size() - 1) {
+            int nextParamID = list.size() - 1;
 
             String message = String.format(
                 "line %d: '%s' parameter value not referenced in " +
@@ -730,7 +807,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     //
     public void printAST() {
-        AST.printDot(root, variableTable, functionTable);
+        AST.printDot(root, variableTable, functionTable, stringTable);
     }
 
     // Imprime as tabelas no sdout

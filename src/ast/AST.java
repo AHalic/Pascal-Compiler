@@ -7,6 +7,7 @@ import java.util.List;
 import array.Array;
 import tables.FunctionTable;
 import tables.VariableTable;
+import tables.StringTable;
 import typing.Type;
 
 public class AST {
@@ -80,6 +81,7 @@ public class AST {
     private static int nr;
     private static VariableTable vt;
     private static FunctionTable ft;
+    private static StringTable st;
 
     // Imprime recursivamente a codificação em DOT da subárvore começando no nó atual.
     // Usa stderr como saída para facilitar o redirecionamento, mas isso é só um hack.
@@ -93,8 +95,8 @@ public class AST {
         if (this.type == ARRAY_TYPE) {
             if (functionScope) {
                 System.err.printf("(%s_%s) ",
-                ft.getVariableTable(functionID).getType(intData),
-                ((Array)ft.getVariableTable(functionID).get(intData)).getComponentType());
+                    ft.getVariableTable(functionID).getType(intData),
+                    ((Array)ft.getVariableTable(functionID).get(intData)).getComponentType());
             } else {
                 System.err.printf("(%s_%s) ", vt.getType(intData), ((Array)vt.get(intData)).getComponentType());
             }
@@ -106,7 +108,7 @@ public class AST {
         if (!functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE | this.kind == NodeKind.VAR_USE_NODE)) {
             System.err.printf("%s", vt.getName(this.intData));
 
-            if (this.type == ARRAY_TYPE) {
+            if ((this.type == ARRAY_TYPE) && (this.kind != NodeKind.VAR_USE_NODE)) {
                 System.err.printf("%s@", ((Array)vt.get(this.intData)).getRangeString());
             } else {
                 System.err.printf("@");
@@ -140,6 +142,7 @@ public class AST {
             if (this.kind == NodeKind.REAL_VAL_NODE) {
                 System.err.printf("%.2f", this.floatData);
             } else if (this.kind == NodeKind.STR_VAL_NODE) {
+                System.err.printf("'%s'", st.get(this.intData));
                 System.err.printf("@%d", this.intData);
             } else if (this.kind == NodeKind.FUNC_USE_NODE) {
                 System.err.printf("@%d", this.intData);
@@ -163,10 +166,14 @@ public class AST {
     }
 
     // Imprime a árvore toda em stderr.
-    public static void printDot(AST tree, VariableTable table, FunctionTable function) {
+    public static void printDot(
+        AST tree, VariableTable variableTable,
+        FunctionTable functionTable, StringTable stringTable) {
+        //
         nr = 0;
-        vt = table;
-        ft = function;
+        vt = variableTable;
+        ft = functionTable;
+        st = stringTable;
 
         System.err.printf("digraph {\ngraph [ordering=\"out\"];\n");
         tree.printNodeDot(tree.functionScope, -1);

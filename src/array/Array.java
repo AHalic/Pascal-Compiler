@@ -10,7 +10,7 @@ import typing.Type;
 
 public class Array extends Entry {
     private List<Range> ranges = new ArrayList<Range>();
-    private Type componentType;
+    public final Type componentType;
 
     public Array(String name, int line, Type type, Type componentType) {
         super(name, line, type);
@@ -27,6 +27,10 @@ public class Array extends Entry {
 
     public void addRange(Range range) {
         this.ranges.add(range);
+    }
+
+    public int getDimensionSize() {
+        return this.ranges.size();
     }
 
     public String getRangeString() {

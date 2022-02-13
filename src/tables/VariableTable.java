@@ -30,6 +30,11 @@ public final class VariableTable extends HashMap<Integer, Entry> {
         return this.indexes.containsKey(string);
     }
 
+    public tables.Entry get(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx);
+    }
+
     public String getName(int index) {
         return this.get(index).getName();
     }

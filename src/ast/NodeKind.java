@@ -36,6 +36,11 @@ public enum NodeKind {
             return "";
         }
     },
+    ARRAY_NODE {
+        public String toString() {
+            return "";
+        }
+    },
     LT_NODE {
         public String toString() {
             return "<";
@@ -134,6 +139,11 @@ public enum NodeKind {
     VAR_USE_NODE {
         public String toString() {
             return "var_use";
+        }
+    },
+    SUBSCRIPT_NODE {
+        public String toString() {
+            return "subscript";
         }
     },
     FUNC_USE_NODE {
