@@ -69,13 +69,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = token.getLine();
 
         // Verifica se existe uma função com mesmo nome
-        if (this.functionTable.contains(text)) {
-            String message = String.format(
-                "line %d: A function declaration already exists for '%s'.",
-                line, text);
-
-            throw new SemanticException(message);
-        }
+        checkExistsFunction(token);
 
         // Verifica se existe uma variável com o mesmo nome
         if (this.variableTable.contains(text)) {
@@ -538,6 +532,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         visit(ctx.resultType());
         Type functionType = lastDeclaredType;
         
+        checkExistsFunction(ctx.identifier().IDENT().getSymbol());
+
         // Cria a função para inserir na tabela
         int idx = this.functionTable.put(new Function(
             ctx.identifier().getText(),
@@ -580,6 +576,17 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         this.variableTable = this.ProgramVariableTable;
 
        return funcNode;
+    }
+
+    // Verifica se existe uma função já declarada com o mesmo nome
+    private void checkExistsFunction(Token token) {
+        if (this.functionTable.contains(token.getText())) {
+            String message = String.format(
+                "line %d: A function declaration already exists for '%s'.",
+                token.getLine(), token.getText());
+
+            throw new SemanticException(message);
+        }
     }
 
     //
