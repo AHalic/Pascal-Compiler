@@ -171,9 +171,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST visitProgram(ProgramContext ctx) {
         AST varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
         AST funcSect = AST.newSubtree(FUNC_LIST_NODE, NO_TYPE);
-
+        
         for (ProcedureAndFunctionDeclarationPartContext function :
-             ctx.block().procedureAndFunctionDeclarationPart()) {
+        ctx.block().procedureAndFunctionDeclarationPart()) {
             // Verifica se existe uma declaração de função
             if (function.procedureOrFunctionDeclaration() != null)
                 funcSect.addChild(visit(function));
@@ -648,17 +648,17 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
             varsSect.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
         }
-
+        
         // Adiciona as variáveis definidas na função
-        if (ctx.block().variableDeclarationPart() != null) {
+        if (ctx.block().variableDeclarationPart(0) != null) {
             List<VariableDeclarationContext> list =
                 ctx.block().variableDeclarationPart(0).variableDeclaration();
-    
+            
             for (VariableDeclarationContext variable : list) {
                 varsSect.addChild(visit(variable));
             }
         }
-
+            
         AST stmtSect = visit(ctx.block().compoundStatement());
         funcNode.addChild(varsSect);
         funcNode.addChild(stmtSect);

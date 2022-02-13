@@ -10,7 +10,6 @@ end;
 
 var
     a: real;
-    Something: integer;
 begin
     Something;
     write('I will do something');

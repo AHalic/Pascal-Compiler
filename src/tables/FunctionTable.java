@@ -17,6 +17,7 @@ public final class FunctionTable extends HashMap<Integer, Function> {
         this.get(idx).addVariable("message", Type.STR_TYPE);
         // read, readln
         idx = this.addBuiltIn("read", Type.NO_TYPE);
+        this.get(idx).addVariable("message", Type.STR_TYPE);
         idx = this.addBuiltIn("readln", Type.NO_TYPE);
     }
 

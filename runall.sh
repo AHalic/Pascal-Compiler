@@ -12,8 +12,8 @@ for infile in `ls $IN/c*.pas`; do
     base=$(basename $infile)
     outfile=$OUT/${base/.pas/.out}
     dotfile=$OUT/${base/.pas/.dot}
-    pdffile=$OUT/${base/.pas/.pdf}
+    pngfile=$OUT/${base/.pas/.png}
     echo Running $base
     java $CLASS_PATH_OPTION:bin Main $infile 1> $outfile 2> $dotfile
-    dot -Tpdf $dotfile -o $pdffile
+    dot -Tpng $dotfile -o $pngfile
 done
