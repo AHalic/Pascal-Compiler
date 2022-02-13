@@ -562,6 +562,16 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             varsSect.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
         }
 
+        // Adiciona as variáveis definidas na função
+        if (ctx.block().variableDeclarationPart() != null) {
+            List<VariableDeclarationContext> list =
+                ctx.block().variableDeclarationPart(0).variableDeclaration();
+    
+            for (VariableDeclarationContext variable : list) {
+                varsSect.addChild(visit(variable));
+            }
+        }
+
         AST stmtSect = visit(ctx.block().compoundStatement());
         funcNode.addChild(varsSect);
         funcNode.addChild(stmtSect);

@@ -104,24 +104,31 @@ public class AST {
 
         //
         if (!functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE | this.kind == NodeKind.VAR_USE_NODE)) {
+            System.err.printf("%s", vt.getName(this.intData));
 
             if (this.type == ARRAY_TYPE) {
-                System.err.printf("%s", vt.getName(this.intData));
-                System.err.printf("%s@", ((Array)vt.get(intData)).getRangeString());
+                System.err.printf("%s@", ((Array)vt.get(this.intData)).getRangeString());
             } else {
-                System.err.printf("%s@", vt.getName(this.intData));
+                System.err.printf("@");
             }
         } else if ((this.kind == NodeKind.FUNCTION_NODE) || 
                    (functionScope && (this.kind == NodeKind.VAR_DECL_NODE || this.kind == NodeKind.VAR_USE_NODE))) {
             //
             functionScope = true;
+            
+            //
+            if (this.kind == NodeKind.FUNCTION_NODE) {
+                functionID = this.intData;
+                System.err.printf("%s", ft.getVariableTable(functionID).getName(0));
+            } else {
+                System.err.printf("%s", ft.getVariableTable(functionID).getName(this.intData));
+            }
 
             if (this.type == ARRAY_TYPE) {
-                System.err.printf("%s@", ((Array)ft.getVariableTable(functionID).get(intData)).getRangeString());
+                System.err.printf("%s@", ((Array)ft.getVariableTable(functionID).get(this.intData)).getRangeString());
             } else {
                 System.err.printf("@");
             }
-
         } else if (this.kind == NodeKind.FUNC_USE_NODE) {
             System.err.printf("%s", ft.get(this.intData).getName());
         } else {
