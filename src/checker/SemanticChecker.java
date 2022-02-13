@@ -45,7 +45,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         String text = token.getText();
         int line = token.getLine();
 
-        // Verifica se é uma chamada de função
+        // Verifica se é uma chamada de função sem parâmtros
         if (functionTable.contains(text)) {
             int idx = functionTable.getIndex(text);
             return new AST(FUNC_USE_NODE, idx, functionTable.getType(idx));
@@ -169,12 +169,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     @Override
     public AST visitProgram(ProgramContext ctx) {
-        AST varsSect = null;
+        AST varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
         AST funcSect = AST.newSubtree(FUNC_LIST_NODE, NO_TYPE);
 
         for (ProcedureAndFunctionDeclarationPartContext function :
              ctx.block().procedureAndFunctionDeclarationPart()) {
-            funcSect.addChild(visit(function));
+            // Verifica se existe uma declaração de função
+            if (function.procedureOrFunctionDeclaration() != null)
+                funcSect.addChild(visit(function));
         }
 
         if (ctx.block().variableDeclarationPart().size() > 0) {
