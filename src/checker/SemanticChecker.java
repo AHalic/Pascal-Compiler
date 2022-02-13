@@ -41,6 +41,13 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         String text = token.getText();
         int line = token.getLine();
 
+        // Verifica se é uma chamada de função
+        if (functionTable.contains(text)) {
+            int idx = functionTable.getIndex(text);
+            return new AST(FUNC_USE_NODE, idx, functionTable.getType(idx));
+        }
+
+        // Verifica se existe na tabela de variáveis
         if (!variableTable.contains(text)) {
             String message = String.format(
                 "line %d: variable '%s' was not declared.\n",
@@ -57,6 +64,16 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         String text = token.getText();
         int line = token.getLine();
         
+        // Verifica se existe uma função com mesmo nome
+        if (this.functionTable.contains(text)) {
+            String message = String.format(
+                "line %d: A function declaration already exists for '%s'.",
+                line, text);
+
+            throw new SemanticException(message);
+        }
+
+        // Verifica se existe uma variável com o mesmo nome
         if (this.variableTable.contains(text)) {
             int idx = variableTable.getIndex(text);
 
@@ -69,6 +86,26 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         int idx = variableTable.put(text, line, lastDeclaredType);
         return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
+    }
+
+    // Visita a chamada de função
+    @Override
+    public AST visitProcedureStatement(ProcedureStatementContext ctx) {
+        String name = ctx.identifier().IDENT().getSymbol().getText();
+        int line = ctx.identifier().IDENT().getSymbol().getLine();
+
+        // Verifica se a função existe na tabela
+        if (!functionTable.contains(name)) {
+            String message = String.format(
+                "line %d: undeclared function '%s'.",
+                line, name);
+            throw new SemanticException(message);
+        }
+
+        return AST.newSubtree(
+            FUNC_USE_NODE,
+            functionTable.getType(name),
+            functionTable.getIndex(name));
     }
 
     //
@@ -126,14 +163,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitAssignmentStatement(AssignmentStatementContext ctx) {
         // Verifica se é uma utilização de função
-        if (ctx.expression().simpleExpression().term().signedFactor()
-                .factor().functionDesignator() != null) {
+        if ((ctx.expression() != null) &&
+            (ctx.expression().simpleExpression().term().signedFactor().factor().functionDesignator() != null)) {
             Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
             AST leftNode = checkVariable(leftToken);
             AST rightNode = visit(ctx.expression());
             return checkAssign(leftToken.getLine(), leftNode, rightNode);
         }
-        
+
         // Verifica se esta atribuindo uma variável ou se é um valor
         if (ctx.variable().size() > 1) {
             Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
