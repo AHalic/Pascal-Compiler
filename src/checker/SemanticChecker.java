@@ -368,11 +368,23 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         for (IndexTypeContext typeContext : ctx.typeList().indexType()) {
             visit(typeContext);
+            checkArrayLimits(ctx.ARRAY().getSymbol().getLine());
             lastArrayDeclared.addRange(lastDeclaredRange);
         }
         
         this.lastDeclaredType = Type.ARRAY_TYPE;
         return null;
+    }
+
+    // Verifica se os limites do Array são válidos
+    private void checkArrayLimits(int line) {
+        if (lastDeclaredRange.upperLimit < lastDeclaredRange.lowerLimit) {
+            String message = String.format(
+                "line %s: High range limit(%d) < low range limit(%d).",
+                line, lastDeclaredRange.upperLimit, lastDeclaredRange.lowerLimit);
+
+            throw new SemanticException(message);
+        }
     }
 
     // Visita o subrange e salva como o último intervalo

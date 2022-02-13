@@ -1,8 +1,8 @@
 package array;
 
 public class Range {
-    private int lowerLimit;
-    private int upperLimit;
+    public final int lowerLimit;
+    public final int upperLimit;
 
     public Range(int lowerLimit, int upperLimit) {
         this.lowerLimit = lowerLimit;
