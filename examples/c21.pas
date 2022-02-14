@@ -1,14 +1,10 @@
 program Arrays1;
 
-function Something: real;
 var
-    numeros_internos: array[-10..0, -10..-5] of integer;
+    a: real;
+    numeros1: array[1..20, 2..4] of integer;
+    numeros2: array[1..20, 2..4] of real;
 begin
-    Something := 1.0;
-    write('I will do something');
-end;
-
-var
-    numeros: array[1..20, 2..4] of integer;
-begin
+    numeros1[1, 2] := 2;
+    a := numeros1[1, 2];
 end.
