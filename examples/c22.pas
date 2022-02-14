@@ -1,10 +1,15 @@
-program Arrays1;
+program FunctionWithVars;
 
 var
-    a: real;
-    numeros1: array[1..20, 2..4] of integer;
-    numeros2: array[1..20, 2..4] of real;
+    a: integer;
 begin
-    // numeros1[1, 2] := 2;
-    a := numeros1[1, 2];
+    a := 0;
+
+    while (true) do
+    begin
+        read(a);
+
+        if (a <= 10) then
+            break;
+    end;
 end.
