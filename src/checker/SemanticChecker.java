@@ -16,7 +16,6 @@ import typing.Type;
 import static typing.Type.*;
 import parser.PascalParser.*;
 import static ast.NodeKind.*;
-import checker.Scope;
 
 import array.Array;
 import array.Range;
@@ -104,12 +103,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
 
         // Verifica se a função existe na tabela
-        if (!functionTable.contains(name)) {
-            String message = String.format(
-                "line %d: undeclared function '%s'.",
-                line, name);
-                throw new SemanticException(message);
-            }
+        checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
         
         // Verifica se existe parâmetros
         if ((ctx.parameterList() != null) && 
@@ -237,7 +231,10 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     @Override
     public AST visitVariable(VariableContext ctx) {
+        System.out.println("CHEGUEI AQUI COM " + ctx.getText());
+
         if (ctx.LBRACK(0) != null) {
+            System.out.print("ENTREI");
             Array array = (Array)(variableTable.get(ctx.identifier(0).getText()));
             AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
             int line = ctx.identifier(0).IDENT().getSymbol().getLine();
@@ -270,51 +267,20 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             
             return node;
         }
+        System.out.println("SAI");
 
-        return super.visitVariable(ctx);
+        return checkVariable(ctx.identifier(0).IDENT().getSymbol());
+        // return super.visitVariable(ctx);
     }
 
     //
     @Override
     public AST visitAssignmentStatement(AssignmentStatementContext ctx) {
-        //
-        if ((ctx.variable() != null) && ctx.variable(0).LBRACK(0) != null) {
-            Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
-            AST leftNode = visit(ctx.variable(0));
-            AST rightNode = visit(ctx.expression());
-            return checkAssign(leftToken.getLine(), leftNode, rightNode);
-        }
-
-        // Verifica se é uma utilização de função
-        if ((ctx.expression() != null) &&
-        (ctx.expression().simpleExpression().term().signedFactor().factor().functionDesignator() != null)) {
-            Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
-            AST leftNode = checkVariable(leftToken);
-            AST rightNode = visit(ctx.expression());
-            return checkAssign(leftToken.getLine(), leftNode, rightNode);
-        }
-
-        // Verifica se esta atribuindo uma variável ou se é um valor
-        if (ctx.variable().size() > 1) {
-            Token leftToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
-            AST rightNode;
-            AST leftNode = checkVariable(leftToken);
-            
-            // Verifica se esta acessando um valor dentro de um vetor
-            if (ctx.variable(1).LBRACK(0) != null) {
-                rightNode = visit(ctx.variable(1));
-            } else {
-                Token rightToken = ctx.variable(1).identifier(0).IDENT().getSymbol();
-                rightNode = checkVariable(rightToken);
-            }
-
-            return checkAssign(leftToken.getLine(), leftNode, rightNode);
-        } else {
-            AST exprNode = visit(ctx.expression());
-            Token idToken = ctx.variable(0).identifier(0).IDENT().getSymbol();
-            AST idNode = checkVariable(idToken);
-            return checkAssign(idToken.getLine(), idNode, exprNode);
-        }
+        int line = ctx.variable().identifier(0).IDENT().getSymbol().getLine();
+        AST expression  = visit(ctx.expression());
+        AST variable = visit(ctx.variable());
+        System.out.println(variable);
+        return checkAssign(line, variable, expression);
     }
 
     public AST visitFunctionDesignator(FunctionDesignatorContext ctx) {
@@ -322,15 +288,15 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         VariableTable table = functionTable.getVariableTable(name);
         List<ActualParameterContext> list = ctx.parameterList().actualParameter();
-
+        
         // Árvore de chamada de função
         AST node = AST.newSubtree(
             FUNC_USE_NODE,
             functionTable.getType(name),
             functionTable.getIndex(name));
-
+            
         // Verifica se os parâmetros estão certos
-        // checkMissingParameters(list.size(), table, functionTable.getParameterQuantity(name), line);
+        checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
         checkMissingParameters(list.size(), functionTable.get(name), line);
         checkExtraParameters(list, table, line);
 
@@ -653,6 +619,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 unified, left, right);
         }
 
+        if (ctx.simpleExpression().term().signedFactor().factor().variable() != null)
+            return visit(ctx.simpleExpression().term().signedFactor().factor().variable());
+
         return super.visitExpression(ctx);
     }
 
@@ -725,6 +694,16 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 "line %d: A function declaration already exists for '%s'.",
                 token.getLine(), token.getText());
 
+            throw new SemanticException(message);
+        }
+    }
+
+    //
+    private void checkNotExistsFunction(Token token) {
+        if (!this.functionTable.contains(token.getText())) {
+            String message = String.format(
+                "line %d: undeclared function '%s'.",
+                token.getLine(), token.getText());
             throw new SemanticException(message);
         }
     }

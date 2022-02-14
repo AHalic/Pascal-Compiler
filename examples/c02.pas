@@ -12,8 +12,6 @@ begin
     name3 := 'Pedro';
 
     write(name1);
-    write('Say hello to ');
-    write(name2);
-
-    readln;
+    write(' say hello to ');
+    writeln(name2);
 end.

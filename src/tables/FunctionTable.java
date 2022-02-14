@@ -72,8 +72,10 @@ public final class FunctionTable extends HashMap<Integer, List<Function>> {
     }
 
     public VariableTable getVariableTable(String name) {
-        int idx = this.indexes.get(name);
-        return this.getVariableTable(idx);
+        if (this.indexes.get(name) != null) {
+            return this.getVariableTable(this.indexes.get(name));
+        }
+        return null;
     }
 
     public VariableTable getVariableTable() {

@@ -319,8 +319,9 @@ simpleStatement
    ;
 
 assignmentStatement
-   : variable ASSIGN variable // Modificado
-   | variable ASSIGN expression
+   //: variable ASSIGN variable // Modificado
+   //| variable ASSIGN expression
+   : variable ASSIGN expression
    ;
 
 variable
