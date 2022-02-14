@@ -29,10 +29,10 @@ public final class FunctionTable extends HashMap<Integer, List<Function>> {
         this.get(idx).get(1).addVariable("int_value", Type.INT_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(1).addVariable("real_value", Type.REAL_TYPE);
+        this.get(idx).get(2).addVariable("real_value", Type.REAL_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(2).addVariable("boolean_value", Type.BOOL_TYPE);
+        this.get(idx).get(3).addVariable("boolean_value", Type.BOOL_TYPE);
         //
         idx = this.addBuiltIn(name, Type.NO_TYPE);
     }
