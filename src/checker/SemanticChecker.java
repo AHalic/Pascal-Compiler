@@ -1,5 +1,6 @@
 package checker;
 
+import org.antlr.runtime.tree.TreeWizard.ContextVisitor;
 import org.antlr.v4.runtime.Token;
 import java.util.List;
 
@@ -103,7 +104,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
 
-        
         // Verifica se a função existe na tabela
         checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
         
@@ -112,7 +112,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             (ctx.parameterList().actualParameter() != null)) {
             list = ctx.parameterList().actualParameter();
         }
-
         
         // Árvore de chamada de função
         AST node = AST.newSubtree(
@@ -192,11 +191,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
         AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
 
-        for (VariableDeclarationContext varList : ctx.variableDeclaration()) {
+        for (var varList : ctx.variableDeclaration()) {
             List<IdentifierContext> idList = varList.identifierList().identifier();
             visit(varList.type_());
 
-            for (IdentifierContext idContext : idList) {
+            for (var idContext : idList) {
                 node.addChild(newVariable(idContext.IDENT().getSymbol()));
             }
         }
@@ -217,13 +216,13 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         AST varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
         AST funcSect = AST.newSubtree(FUNC_LIST_NODE, NO_TYPE);
         
-        for (ProcedureAndFunctionDeclarationPartContext function :
-        ctx.block().procedureAndFunctionDeclarationPart()) {
-            // Verifica se existe uma declaração de função
+        // Verifica se existe uma declaração de função
+        for (var function : ctx.block().procedureAndFunctionDeclarationPart()) {
             if (function.procedureOrFunctionDeclaration() != null)
                 funcSect.addChild(visit(function));
         }
 
+        // Verifica se existe declaração de variáveis
         if (ctx.block().variableDeclarationPart().size() > 0) {
             varsSect = visit(ctx.block().variableDeclarationPart(0));
         }
@@ -252,7 +251,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             // Adiciona os índices como elementos do subscription
             int subscriptionQuantity = 0;
 
-            for (ExpressionContext range : ctx.expression()) {
+            for (var range : ctx.expression()) {
                 node.addChild(visit(range));
                 subscriptionQuantity++;
             }
@@ -278,7 +277,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = ctx.variable().identifier(0).IDENT().getSymbol().getLine();
         AST expression  = visit(ctx.expression());
         AST variable = visit(ctx.variable());
-        // TODO: ARRUMAR AQUI
         return checkAssign(line, variable, expression);
     }
 
@@ -458,7 +456,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             ARRAY_TYPE,
             lastDeclaredType);
 
-        for (IndexTypeContext typeContext : ctx.typeList().indexType()) {
+        for (var typeContext : ctx.typeList().indexType()) {
             visit(typeContext);
             checkArrayLimits(ctx.ARRAY().getSymbol().getLine());
             lastArrayDeclared.addRange(lastDeclaredRange);
@@ -583,7 +581,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST visitCompoundStatement(CompoundStatementContext ctx) {
         AST node = AST.newSubtree(BLOCK_NODE, NO_TYPE);
 
-        for (StatementContext context : ctx.statements().statement()) {
+        for (var context : ctx.statements().statement()) {
             node.addChild(visit(context.unlabelledStatement()));
         }
 
@@ -619,15 +617,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         return visit(ctx.simpleExpression());
     }
-
-    //
-    @Override
-    public AST visitProcedureAndFunctionDeclarationPart(
-        ProcedureAndFunctionDeclarationPartContext ctx) {
-            return super.visit(
-                ctx.procedureOrFunctionDeclaration()
-                   .functionDeclaration());
-        }
 
     //
     @Override
@@ -667,7 +656,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             List<VariableDeclarationContext> list =
                 ctx.block().variableDeclarationPart(0).variableDeclaration();
             
-            for (VariableDeclarationContext variable : list) {
+            for (var variable : list) {
                 varsSect.addChild(visit(variable));
             }
         }
@@ -712,15 +701,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
         params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
 
-        for (FormalParameterSectionContext context : ctx.formalParameterSection()) {
+        for (var context : ctx.formalParameterSection()) {
             // Atualiza o lastDeclaredType
             visit(context.parameterGroup().typeIdentifier());
-
             // Salva cada declaracao de parâmetro
             IdentifierListContext list = context.parameterGroup().identifierList();
 
-            for (IdentifierContext identifier : list.identifier()) {
-                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType, true);
+            for (var identifier : list.identifier()) {
+                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType,true);
                 params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
             }
         }
@@ -808,24 +796,31 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     //
+    public AST createWhileBlockNode(UnlabelledStatementContext ctx) {
+        if ((ctx.structuredStatement() != null) &&
+            (ctx.structuredStatement().compoundStatement() != null)) {
+            //
+            return visit(ctx.structuredStatement());
+        }
+
+        AST blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE); 
+        blockNode.addChild(visitUnlabelledStatement(ctx));
+        return blockNode;
+    }
+
+    //
     @Override
     public AST visitWhileStatement(WhileStatementContext ctx) {
         // Analisa a expressão booleana.
         AST exprNode = visit(ctx.expression());
-        AST blockNode = null;
         checkBoolExpr(ctx.WHILE().getSymbol().getLine(), "while", exprNode.type);
-
+        
         // Troca de escopo
         Scope lastScope = currentScope;
         currentScope = Scope.WHILE_SCOPE;
-
+        
         // Constrói o bloco de código do loop.
-        if (ctx.statement().unlabelledStatement().structuredStatement() == null) {
-            blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-            blockNode.addChild(visit(ctx.statement().unlabelledStatement()));
-        } else {
-            blockNode = visit(ctx.statement().unlabelledStatement());
-        }
+        AST blockNode = createWhileBlockNode(ctx.statement().unlabelledStatement());
 
         // Volta para o escopo anterior
         currentScope = lastScope;
