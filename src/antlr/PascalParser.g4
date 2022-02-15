@@ -308,7 +308,7 @@ statement
 
 unlabelledStatement
    : simpleStatement
-   | structuredStatement      
+   | structuredStatement
    ;
 
 simpleStatement

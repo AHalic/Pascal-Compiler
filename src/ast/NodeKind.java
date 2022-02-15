@@ -126,6 +126,11 @@ public enum NodeKind {
             return "OR";
         }
     },
+    NOT_NODE {
+        public String toString() {
+            return "NOT";
+        }
+    },
     VAR_DECL_NODE {
         public String toString() {
             return "var_decl";

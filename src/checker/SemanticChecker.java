@@ -21,6 +21,7 @@ import array.Array;
 import array.Range;
 
 import exception.SemanticException;
+import exception.NotImplementedException;
 import static typing.Conversion.*;
 
 public class SemanticChecker extends PascalParserBaseVisitor<AST> {
@@ -102,6 +103,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
 
+        
         // Verifica se a função existe na tabela
         checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
         
@@ -111,12 +113,13 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             list = ctx.parameterList().actualParameter();
         }
 
+        
         // Árvore de chamada de função
         AST node = AST.newSubtree(
             FUNC_USE_NODE,
             functionTable.getType(name),
             functionTable.getIndex(name));
-
+            
         /* Variáveis para buscar se existe alguma função válida que possui
            dentro da lista de funções de nome "name". Na prática, apenas
            funções built-in terão sobrecarga. */
@@ -133,10 +136,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             try {
                 for (int i = 0; i < list.size(); i++) {
                         // Insere todos parâmetros no nó de chamada de função
-                        AST param = visit(list.get(i).expression().simpleExpression().term());
+                        AST param = visit(list.get(i));
                         param = createConversionNode(table.getType(i + 1), param.type, param, line);
                         types.add(param.type);
                         node.addChild(param);
+
                         //
                         if (i == list.size() - 1) validFunction = true;
                     }
@@ -231,10 +235,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     @Override
     public AST visitVariable(VariableContext ctx) {
-        System.out.println("CHEGUEI AQUI COM " + ctx.getText());
-
         if (ctx.LBRACK(0) != null) {
-            System.out.print("ENTREI");
             Array array = (Array)(variableTable.get(ctx.identifier(0).getText()));
             AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
             int line = ctx.identifier(0).IDENT().getSymbol().getLine();
@@ -267,10 +268,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             
             return node;
         }
-        System.out.println("SAI");
 
         return checkVariable(ctx.identifier(0).IDENT().getSymbol());
-        // return super.visitVariable(ctx);
     }
 
     //
@@ -279,7 +278,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         int line = ctx.variable().identifier(0).IDENT().getSymbol().getLine();
         AST expression  = visit(ctx.expression());
         AST variable = visit(ctx.variable());
-        System.out.println(variable);
+        // TODO: ARRUMAR AQUI
         return checkAssign(line, variable, expression);
     }
 
@@ -410,7 +409,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 return new AST(exprNode.kind, exprNode.intData*(-1), INT_TYPE);
             }
         }
-        
         return exprNode;
     }
 
@@ -532,7 +530,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             }
         }
 
-        return super.visitSimpleExpression(ctx);
+        return visitTerm(ctx.term());
     }
 
     // Visita a regra de operadores multiplicativos
@@ -577,7 +575,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             }
         }
 
-        return super.visitTerm(ctx);
+        return visitSignedFactor(ctx.signedFactor());
     }
 
     //
@@ -619,10 +617,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 unified, left, right);
         }
 
-        if (ctx.simpleExpression().term().signedFactor().factor().variable() != null)
-            return visit(ctx.simpleExpression().term().signedFactor().factor().variable());
-
-        return super.visitExpression(ctx);
+        return visit(ctx.simpleExpression());
     }
 
     //
@@ -736,19 +731,38 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     @Override
     public AST visitFactor(FactorContext ctx) {
-        if (ctx.variable() != null) {
-            return checkVariable(ctx.variable().identifier(0).IDENT().getSymbol());
-        }
+        
+        if (ctx.variable() != null)
+        return visit(ctx.variable());
+        
+        if (ctx.LPAREN() != null)
+        return visit(ctx.expression());
 
-        if (ctx.LPAREN() != null) {
-            return visitExpression(ctx.expression());
-        }
+        if (ctx.functionDesignator() != null)
+            return visit(ctx.functionDesignator());
 
-        if (ctx.unsignedConstant() != null) {
+        if (ctx.unsignedConstant() != null)
             return visit(ctx.unsignedConstant());
+            
+        if (ctx.set_() != null) {
+            int line = ctx.set_().LBRACK().getSymbol().getLine();
+            notImplemented("set", line);
+        }
+            
+        if (ctx.NOT() != null) {
+            visit(ctx.factor());
+            return AST.newSubtree(NOT_NODE, lastDeclaredType, visit(ctx.factor()));
         }
 
         return super.visitFactor(ctx);
+    }
+
+    //
+    private void notImplemented(String element, int line) {
+        String message = String.format(
+            "line %d: '%s' not yet implemented!",
+            line, element);
+        throw new NotImplementedException(message);
     }
 
     @Override // IF expression THEN statement (: ELSE statement)?
