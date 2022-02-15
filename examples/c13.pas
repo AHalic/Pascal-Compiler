@@ -1,9 +1,16 @@
-program Flags;
+// Exemplo de programa usando loop aninhado sem block no externo
 
+program whileLoop;
 var
-    flag1 : boolean;
-    flag2 : boolean;
+   a: integer;
 
 begin
-    flag2 := (TRUE AND FALSE) OR (FALSE OR TRUE);
+   a := 10;
+   while  a < 20  do
+    while a < 30 do
+        begin
+            a := a + 2;
+            write(a);
+        end;
+   a := a + 1;
 end.

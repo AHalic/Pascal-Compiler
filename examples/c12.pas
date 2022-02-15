@@ -1,8 +1,14 @@
-program Flags;
+// Exemplo de programa usando loop
 
+program whileLoop;
 var
-    number : real;
+   a: integer;
 
 begin
-    number := (((10 + 8) * 2) + 1) / 10;
+   a := 10;
+   while  a < 20  do
+      a := a + 2;
+   
+   a := a + 1;
+   
 end.

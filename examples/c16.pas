@@ -1,15 +1,15 @@
-// Exemplo de programa usando funções
-
-program Functions;
-
-function Somar(add1, add2: real) : real;
-begin
-    Somar := add1 + add2;
-end;
+program FunctionWithVars;
 
 var
-   a: real;
-
+    a: integer;
 begin
-    a := Somar(1, 2.0);
+    a := 0;
+
+    while (true) do
+    begin
+        read(a);
+
+        if (a <= 10) then
+            break;
+    end;
 end.

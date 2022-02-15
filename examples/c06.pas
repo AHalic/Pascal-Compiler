@@ -1,11 +1,12 @@
-program Flags;
+program FunctionWithVars;
 
+function Teste(num1, num2:real): integer;
 var
-    flag : boolean;
+    temp: integer;
+begin
+    Teste := 1;
+end;
 
 begin
-    flag := 1.0 < 2;
-    flag := 1.2 > 1;
-    flag := 1.0 >= 1.0;
-    flag := 1.0 <> 5.0;
+    Teste(1.0, 2);
 end.

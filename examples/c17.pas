@@ -1,22 +1,13 @@
-// exemplo de uso do if
+program FunctionWithVars;
 
-program ifelseChecking;
 var
-   { local variable definition }
-   a : integer;
-
+    a: integer;
 begin
-   a := 10;
-   (* check the boolean condition *)
-   if( a < 20 ) then
-   begin
-      (* if condition is true then print the following *)
-      a := 4;
-      a := a + 2;
-    end
-   
-   else
-      (* if condition is false then print the following *) 
-      a := 4;
-    // writeln('value of a is : ', a);
+    a := 0;
+
+    while (a < 5) do
+        a := a + 1;
+
+    if (a <= 5) then
+        write(a)
 end.

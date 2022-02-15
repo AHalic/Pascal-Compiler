@@ -8,7 +8,7 @@ var
 begin
    a := 10;
    (* check the boolean condition *)
-   if( a < 20 ) then
+   if( a + 20 ) then
    begin
       a := 4;
       a := a + 2;

@@ -1,15 +1,22 @@
-// Exemplo de programa usando loop
+// exemplo de uso do if
 
-program whileLoop;
+program ifelseChecking;
 var
-   a: integer;
+   { local variable definition }
+   a : integer;
 
 begin
    a := 10;
-   while  a < 20  do
+   (* check the boolean condition *)
+   if( a < 20 ) then
    begin
+      (* if condition is true then print the following *)
+      a := 4;
       a := a + 2;
-   end;
-   // a := a + 1;
+    end
    
+   else
+      (* if condition is false then print the following *) 
+      a := 4;
+    // writeln('value of a is : ', a);
 end.

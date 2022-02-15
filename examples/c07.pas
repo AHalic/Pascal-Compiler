@@ -1,12 +1,9 @@
-program FunctionWithVars;
+program Arrays1;
 
-function Teste(num1, num2:real): integer;
 var
-    temp: integer;
+    a: integer;
+    numeros: array[1..20, 2..4] of integer;
 begin
-    Teste := 1;
-end;
-
-begin
-    Teste(1.0, 2);
+    numeros[1, 2] := 2;
+    a := numeros[1, 2];
 end.

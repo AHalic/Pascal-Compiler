@@ -1,9 +1,16 @@
-program Arrays1;
+// Exemplo de programa usando função sem parâmetro
+
+program Functions;
+
+function Something: real;
+begin
+    Something := 1.0;
+    write('I will do something');
+end;
 
 var
-    a: integer;
-    numeros: array[1..20, 2..4] of integer;
+    a: real;
 begin
-    numeros[1, 2] := 2;
-    a := numeros[1, 2];
+    Something;
+    write('I will do something');
 end.

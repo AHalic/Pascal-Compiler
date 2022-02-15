@@ -11,5 +11,5 @@ var
    a: real;
 
 begin
-    a := Somar(1, 2.0);
+    a := Somar(1, 2.0, 5);
 end.
