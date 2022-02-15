@@ -48,10 +48,25 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         String text = token.getText();
         int line = token.getLine();
 
-        // Verifica se é uma chamada de função sem parâmtros
-        if (functionTable.contains(text)) {
+        // Verifica se é uma chamada de função
+        if (this.currentScope == Scope.PROGRAM && functionTable.contains(text)) {
             int idx = functionTable.getIndex(text);
-            return new AST(FUNC_USE_NODE, idx, functionTable.getType(idx));
+            Function validFunction = null;
+
+            for (Function function: functionTable.getFunctions(text)) {
+                if (function.getVariableTable().size() == 1) {
+                    validFunction = function;
+                    break;
+                }
+            }
+
+            // Verifica se achou a função e pode retornar
+            if (validFunction != null) {
+                return new AST(FUNC_USE_NODE, idx, validFunction.getType());
+            }
+
+            // Achou, verifica se foi informado menos parâmetros do que o necessário
+            checkMissingParameters(0, functionTable.get(text), line);
         }
 
         // Verifica se existe na tabela de variáveis
@@ -172,7 +187,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     //
     private void checkScope(String name, int lineNo) {
-        if (name.equals("break") && this.currentScope != Scope.WHILE_SCOPE) {
+        if (name.equals("break") && this.currentScope != Scope.WHILE) {
             throw new SemanticException(String.format(
                 "line %d: '%s' token out of loop scope.", lineNo, name));
         }
@@ -633,6 +648,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             functionType));
             
         //
+        Scope lastScope = this.currentScope;
+        this.currentScope = Scope.FUNCTION;
         this.variableTable = this.functionTable.getVariableTable();
 
         // cria o nó da função
@@ -666,6 +683,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         //
         this.variableTable = this.ProgramVariableTable;
+        this.currentScope = lastScope;
 
        return funcNode;
     }
@@ -718,9 +736,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     @Override
     public AST visitFactor(FactorContext ctx) {
-        
         if (ctx.variable() != null)
-        return visit(ctx.variable());
+            return visit(ctx.variable());
         
         if (ctx.LPAREN() != null)
         return visit(ctx.expression());
@@ -792,7 +809,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         
         // Troca de escopo
         Scope lastScope = currentScope;
-        currentScope = Scope.WHILE_SCOPE;
+        currentScope = Scope.WHILE;
         
         // Constrói o bloco de código do loop.
         AST blockNode = createStatementBlockNode(ctx.statement());

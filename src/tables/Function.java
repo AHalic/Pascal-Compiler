@@ -9,6 +9,7 @@ public class Function extends Entry {
 
     public Function(String name, int line, Type type) {
         super(name, line, type);
+        this.builtIn = false;
     }
 
     public Function(String name, int line, Type type, boolean builtIn) {

@@ -42,6 +42,11 @@ public final class FunctionTable extends HashMap<Integer, List<Function>> {
         return this.get(idx).get(0); 
     }
 
+    public List<Function> getFunctions(String name) {
+        int idx = this.indexes.get(name);
+        return this.get(idx); 
+    }
+
     public int addBuiltIn(String name, Type type) {
         Function function = new Function(name, -1, type, true);
         function.addVariable(name, type, false);
