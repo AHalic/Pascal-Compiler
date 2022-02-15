@@ -1,6 +1,5 @@
 package checker;
 
-import org.antlr.runtime.tree.TreeWizard.ContextVisitor;
 import org.antlr.v4.runtime.Token;
 import java.util.List;
 
@@ -237,8 +236,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         if (ctx.LBRACK(0) != null) {
             Array array = (Array)(variableTable.get(ctx.identifier(0).getText()));
             AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
-            int line = ctx.identifier(0).IDENT().getSymbol().getLine();
-            String name = ctx.identifier(0).IDENT().getSymbol().getText();
+            Token token = ctx.identifier(0).IDENT().getSymbol();
 
             // Adiciona o array como primeiro elemento do subscription
             node.addChild(
@@ -249,26 +247,27 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 );
             
             // Adiciona os índices como elementos do subscription
-            int subscriptionQuantity = 0;
-
             for (var range : ctx.expression()) {
                 node.addChild(visit(range));
-                subscriptionQuantity++;
             }
 
-            // Verifica se a quantidade de íncide esta correta
-            if (subscriptionQuantity != array.getDimensionSize()) {
-                String message = String.format(
-                    "line %d: inconsistent number of indices for array '%s'," +
-                    " informed %d indices being necessary %d.",
-                    line, name, subscriptionQuantity, array.getDimensionSize());
-                throw new SemanticException(message);
-            }
+            checkSubscriptDimension(ctx.expression().size(), array, token);
             
             return node;
         }
 
         return checkVariable(ctx.identifier(0).IDENT().getSymbol());
+    }
+
+    //
+    private void checkSubscriptDimension(int subscriptDim, Array array, Token token) {
+        if (subscriptDim != array.getDimensionSize()) {
+            String message = String.format(
+                "line %d: inconsistent number of indices for array '%s'," +
+                " informed %d indices being necessary %d.",
+                token.getLine(), token.getText(), subscriptDim, array.getDimensionSize());
+            throw new SemanticException(message);
+        }
     }
 
     //
@@ -757,54 +756,30 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST visitIfStatement(IfStatementContext ctx) {
         // Analisa a expressão booleana.
         AST exprNode = visit(ctx.expression());
-        AST thenNode = null;
+        AST thenNode = createStatementBlockNode(ctx.statement(0));
         checkBoolExpr(ctx.IF().getSymbol().getLine(), "if", exprNode.type);
 
+        // Constrói o bloco da condicional.
         if (ctx.ELSE() == null) {
-            // Constrói o bloco de código do loop.
-
-            if (ctx.statement(0).unlabelledStatement().structuredStatement() == null) {
-                thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-                thenNode.addChild(visit(ctx.statement(0).unlabelledStatement()));
-            } else {
-                thenNode = visit(ctx.statement(0).unlabelledStatement());
-            }
-
             return AST.newSubtree(IF_NODE, NO_TYPE, thenNode, exprNode);
         } 
         else {
-            // Faz uma busca pelo token na lista de filhos.
-            if (ctx.statement(0).unlabelledStatement().structuredStatement() == null) {
-                thenNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-                thenNode.addChild(visit(ctx.statement(0).unlabelledStatement()));
-            } else {
-                thenNode = visit(ctx.statement(0).unlabelledStatement());
-            }
-
-            // Cria o nó com o bloco de comandos do ELSE.
-            AST elseNode = null;
-            
-            if (ctx.statement(1).unlabelledStatement().structuredStatement() == null) {
-                elseNode = AST.newSubtree(BLOCK_NODE, NO_TYPE);
-                elseNode.addChild(visit(ctx.statement(1).unlabelledStatement()));
-            } else {
-                elseNode = visit(ctx.statement(1).unlabelledStatement());
-            }
-
+            AST elseNode = createStatementBlockNode(ctx.statement(1));
             return AST.newSubtree(IF_NODE, NO_TYPE, exprNode, thenNode, elseNode);
         }
     }
 
     //
-    public AST createWhileBlockNode(UnlabelledStatementContext ctx) {
-        if ((ctx.structuredStatement() != null) &&
-            (ctx.structuredStatement().compoundStatement() != null)) {
+    public AST createStatementBlockNode(StatementContext ctx) {
+        UnlabelledStatementContext unlabelled = ctx.unlabelledStatement();
+        if ((unlabelled.structuredStatement() != null) &&
+            (unlabelled.structuredStatement().compoundStatement() != null)) {
             //
-            return visit(ctx.structuredStatement());
+            return visit(unlabelled.structuredStatement());
         }
 
         AST blockNode = AST.newSubtree(BLOCK_NODE, NO_TYPE); 
-        blockNode.addChild(visitUnlabelledStatement(ctx));
+        blockNode.addChild(visitUnlabelledStatement(unlabelled));
         return blockNode;
     }
 
@@ -820,7 +795,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         currentScope = Scope.WHILE_SCOPE;
         
         // Constrói o bloco de código do loop.
-        AST blockNode = createWhileBlockNode(ctx.statement().unlabelledStatement());
+        AST blockNode = createStatementBlockNode(ctx.statement());
 
         // Volta para o escopo anterior
         currentScope = lastScope;
