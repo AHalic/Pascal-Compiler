@@ -218,7 +218,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         // Verifica se existe uma declaração de função
         for (var function : ctx.block().procedureAndFunctionDeclarationPart()) {
             if (function.procedureOrFunctionDeclaration() != null)
-                funcSect.addChild(visit(function));
+                funcSect.addChild(visit(function.procedureOrFunctionDeclaration()));
         }
 
         // Verifica se existe declaração de variáveis
