@@ -45,7 +45,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     // Cria um nó de utilização de variável caso já tenha sido declarada
     public AST checkVariable(Token token) {
-        String text = token.getText();
+        String text = token.getText().toLowerCase();
         int line = token.getLine();
 
         // Verifica se é uma chamada de função
@@ -83,7 +83,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     // Cria uma nova variável caso ainda não tenha sido declarada
     public AST newVariable(Token token) {
-        String text = token.getText();
+        String text = token.getText().toLowerCase();
         int line = token.getLine();
 
         // Verifica se existe uma função com mesmo nome
@@ -114,7 +114,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     // Visita a chamada de função
     @Override
     public AST visitProcedureStatement(ProcedureStatementContext ctx) {
-        String name = ctx.identifier().IDENT().getSymbol().getText();
+        String name = ctx.identifier().IDENT().getSymbol().getText().toLowerCase();
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
 
@@ -196,7 +196,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     // Visita o nó de criação de string
     @Override
     public AST visitExprStrVal(ExprStrValContext ctx) {
-        int idx = stringTable.add(ctx.string().getText());
+        int idx = stringTable.add(ctx.string().getText().toLowerCase());
         return new AST(STR_VAL_NODE, idx, STR_TYPE);
     }
 
@@ -249,7 +249,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitVariable(VariableContext ctx) {
         if (ctx.LBRACK(0) != null) {
-            Array array = (Array)(variableTable.get(ctx.identifier(0).getText()));
+            Array array = (Array)(variableTable.get(ctx.identifier(0).getText().toLowerCase()));
             AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
             Token token = ctx.identifier(0).IDENT().getSymbol();
 
@@ -278,9 +278,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     private void checkSubscriptDimension(int subscriptDim, Array array, Token token) {
         if (subscriptDim != array.getDimensionSize()) {
             String message = String.format(
-                "line %d: inconsistent number of indices for array '%s'," +
-                " informed %d indices being necessary %d.",
-                token.getLine(), token.getText(), subscriptDim, array.getDimensionSize());
+                "line %d: inconsistent number of indice(s) for array '%s'," +
+                " informed %d indice(s) being necessary %d.",
+                token.getLine(), token.getText().toLowerCase(), subscriptDim, array.getDimensionSize());
             throw new SemanticException(message);
         }
     }
@@ -295,7 +295,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     public AST visitFunctionDesignator(FunctionDesignatorContext ctx) {
-        String name = ctx.identifier().getText();
+        String name = ctx.identifier().getText().toLowerCase();
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         VariableTable table = functionTable.getVariableTable(name);
         List<ActualParameterContext> list = ctx.parameterList().actualParameter();
@@ -332,7 +332,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             String message = String.format(
                 "line %d: '%s' parameter value not referenced in " +
                 "'%s' function declaration.",
-                lineNo, list.get(nextParamID).getText(), table.getName(0));
+                lineNo, list.get(nextParamID).getText().toLowerCase(), table.getName(0));
             throw new SemanticException(message);
         }
     }
@@ -398,14 +398,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     // TODO: Adicionar char e string.
     @Override
     public AST visitExprIntegerVal(ExprIntegerValContext ctx) {
-        int intData = Integer.parseInt(ctx.getText());
+        int intData = Integer.parseInt(ctx.getText().toLowerCase());
         return new AST(INT_VAL_NODE, intData, INT_TYPE);
     }
 
     //
     @Override
     public AST visitExprRealVal(ExprRealValContext ctx) {
-        float floatData = Float.parseFloat(ctx.getText());
+        float floatData = Float.parseFloat(ctx.getText().toLowerCase());
         return new AST(REAL_VAL_NODE, floatData, REAL_TYPE);
     }
 
@@ -495,8 +495,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitIndexType(IndexTypeContext ctx) {
         this.lastDeclaredRange = new Range(
-            Integer.parseInt(ctx.simpleType().subrangeType().constant(0).getText()),
-            Integer.parseInt(ctx.simpleType().subrangeType().constant(1).getText()));
+            Integer.parseInt(ctx.simpleType().subrangeType().constant(0).getText().toLowerCase()),
+            Integer.parseInt(ctx.simpleType().subrangeType().constant(1).getText().toLowerCase()));
         return null;
     }
 
@@ -525,7 +525,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             if (unified.type == NO_TYPE) {
                 typeError(
                     ctx.additiveoperator().operator.getLine(),
-                    ctx.additiveoperator().operator.getText(),
+                    ctx.additiveoperator().operator.getText().toLowerCase(),
                     left.type, right.type);
             }
 
@@ -569,7 +569,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             if (unified.type == NO_TYPE) {
                 typeError(
                     ctx.multiplicativeoperator().operator.getLine(),
-                    ctx.multiplicativeoperator().operator.getText(),
+                    ctx.multiplicativeoperator().operator.getText().toLowerCase(),
                     left.type, right.type);
             }
 
@@ -617,7 +617,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             if (unified.type == NO_TYPE) {
                 typeError(
                     ctx.relationaloperator().operator.getLine(),
-                    ctx.relationaloperator().operator.getText(),
+                    ctx.relationaloperator().operator.getText().toLowerCase(),
                     leftType, rightType);
             }
 
@@ -643,7 +643,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         // Cria a função para inserir na tabela
         int idx = this.functionTable.put(new Function(
-            ctx.identifier().getText(),
+            ctx.identifier().getText().toLowerCase(),
             ctx.identifier().IDENT().getSymbol().getLine(),
             functionType));
             
@@ -690,10 +690,10 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     // Verifica se existe uma função já declarada com o mesmo nome
     private void checkExistsFunction(Token token) {
-        if (this.functionTable.contains(token.getText())) {
+        if (this.functionTable.contains(token.getText().toLowerCase())) {
             String message = String.format(
                 "line %d: A function declaration already exists for '%s'.",
-                token.getLine(), token.getText());
+                token.getLine(), token.getText().toLowerCase());
 
             throw new SemanticException(message);
         }
@@ -701,10 +701,10 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     //
     private void checkNotExistsFunction(Token token) {
-        if (!this.functionTable.contains(token.getText())) {
+        if (!this.functionTable.contains(token.getText().toLowerCase())) {
             String message = String.format(
                 "line %d: undeclared function '%s'.",
-                token.getLine(), token.getText());
+                token.getLine(), token.getText().toLowerCase());
             throw new SemanticException(message);
         }
     }
@@ -725,7 +725,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             IdentifierListContext list = context.parameterGroup().identifierList();
 
             for (var identifier : list.identifier()) {
-                idx = functionTable.addVarInLastFunction(identifier.getText(), lastDeclaredType,true);
+                idx = functionTable.addVarInLastFunction(identifier.getText().toLowerCase(), lastDeclaredType,true);
                 params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
             }
         }
@@ -838,7 +838,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             default:
                 String message = String.format(
                     "%line %d: invalid operator '%s'.\n",
-                    operator.getLine(), operator.getText());
+                    operator.getLine(), operator.getText().toLowerCase());
                 throw new SemanticException(message);
         }
     }
