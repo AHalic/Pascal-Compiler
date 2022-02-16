@@ -386,9 +386,19 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     //
-    private static AST checkAssign(int lineNo, AST left, AST right) {
+    private AST checkAssign(int lineNo, AST left, AST right) {
         Type lt = left.type;
         Type rt = right.type;
+
+        //
+        if (left.kind == FUNC_USE_NODE) {
+            String message = String.format(
+                "line %d: the identifier '%s' corresponds to a function," +
+                " so it is not possible to assign values.",
+                lineNo, this.functionTable.getName(left.intData));
+
+            throw new SemanticException(message);
+        }
 
         right = createConversionNode(lt, rt, right, lineNo);
 
