@@ -2,7 +2,7 @@ package checker;
 
 public enum Scope {
     PROGRAM(0),
-    IF_SCOPE(1),
+    IF(1),
     WHILE(2),
     FUNCTION(3);
 
@@ -10,5 +10,9 @@ public enum Scope {
 
     Scope(int level) {
         this.level = level;
+    }
+
+    public int getLevel() {
+        return this.level;
     }
 }

@@ -1,11 +1,6 @@
 package typing;
 
-import static typing.Conversion.BOOL2INT;
-import static typing.Conversion.BOOL2REAL;
-import static typing.Conversion.BOOL2STRING;
 import static typing.Conversion.INT2REAL;
-import static typing.Conversion.INT2STRING;
-import static typing.Conversion.REAL2STRING;
 import static typing.Conversion.NONE;
 
 import typing.Conversion.Unified;

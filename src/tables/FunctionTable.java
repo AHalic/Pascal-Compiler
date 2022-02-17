@@ -1,152 +1,105 @@
 package tables;
 
-import java.util.HashMap;
 import java.util.List;
 import typing.Type;
-
-import java.sql.Time;
-import java.util.ArrayList;
 import java.util.Formatter;
 
-public final class FunctionTable extends HashMap<Integer, List<Function>> {
-    private HashMap<String, Integer> indexes = new HashMap<String, Integer>();
-    private int current = 0;
+public class FunctionTable extends Table<FunctionWrapper> {
+    //
+    public Integer add(Function function) {
+        if (this.ID_.containsKey(function.name)) {
+            int idx = this.ID_.get(function.name);
+            this.get(idx).addOverloaded(function);
+            return idx;
+        } else {
+            FunctionWrapper wrapper = new FunctionWrapper(
+                function.name,
+                function.line,
+                Type.NO_TYPE);
+            wrapper.addOverloaded(function);
+            this.put(currentID, wrapper);
+            this.ID_.put(function.name, currentID);
+            return currentID++;
+        }
+    }
 
-    public FunctionTable() {
+    public FunctionTable(boolean builtIn) {
+        super();
+        
         // Cria as funções built-in
-       this.addBuiltInFunctionOverloaded("write");
-       this.addBuiltInFunctionOverloaded("writeln");
-       this.addBuiltInFunctionOverloaded("read");
-       this.addBuiltInFunctionOverloaded("readln");
-       this.addBuiltIn("break", Type.NO_TYPE);
+        if (builtIn) {
+           this.addBuiltInFunctionOverloaded("write");
+           this.addBuiltInFunctionOverloaded("writeln");
+           this.addBuiltInFunctionOverloaded("read");
+           this.addBuiltInFunctionOverloaded("readln");
+           this.addBuiltIn("break", Type.NO_TYPE);
+        }
     }
 
     private void addBuiltInFunctionOverloaded(String name) {
         int idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(0).addVariable("message", Type.STR_TYPE);
+        this.get(idx).getOverloaded(0).addVariable("message", Type.STR_TYPE);
         //
-        idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(1).addVariable("int_value", Type.INT_TYPE);
+        this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).getOverloaded(1).addVariable("int_value", Type.INT_TYPE);
         //
-        idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(2).addVariable("real_value", Type.REAL_TYPE);
+        this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).getOverloaded(2).addVariable("real_value", Type.REAL_TYPE);
         //
-        idx = this.addBuiltIn(name, Type.NO_TYPE);
-        this.get(idx).get(3).addVariable("boolean_value", Type.BOOL_TYPE);
+        this.addBuiltIn(name, Type.NO_TYPE);
+        this.get(idx).getOverloaded(3).addVariable("boolean_value", Type.BOOL_TYPE);
         //
-        idx = this.addBuiltIn(name, Type.NO_TYPE);
-    }
-
-    public Function get(String name) {
-        int idx = this.indexes.get(name);
-        return this.get(idx).get(0); 
-    }
-
-    public List<Function> getFunctions(String name) {
-        int idx = this.indexes.get(name);
-        return this.get(idx); 
+        this.addBuiltIn(name, Type.NO_TYPE);
     }
 
     public int addBuiltIn(String name, Type type) {
-        Function function = new Function(name, -1, type, true);
-        function.addVariable(name, type, false);
-        return this.put(function);
-    }
+        int idx = -1;
+        FunctionWrapper wrapper = null;
 
-    public int getParameterQuantity(String name) {
-        int idx = this.indexes.get(name);
-        return this.get(idx).get(0).getParameterQuantity();
-    }
-
-    public int put(Function function) {
-        if (this.indexes.containsKey(function.getName())) {
-            int idx = this.indexes.get(function.getName());
-            this.get(idx).add(function);
-            return idx;
+        if (!this.contains(name)) {
+            wrapper = new FunctionWrapper(name, -1, Type.NO_TYPE, true);
+            idx = this.add(wrapper);
         } else {
-            List<Function> list = new ArrayList<>();
-            list.add(function);
-            this.put(current, list);
-            this.indexes.put(function.getName(), current);
-            return this.current++;
+            wrapper = this.get(name);
+            idx = this.getIndex(name);
+        }
+
+        Function function = new Function(name, -1, type);
+        function.addVariable(name, -1, type, false);
+        wrapper.addOverloaded(function);
+        return idx;
+    }
+
+    protected void getString(Formatter formatter, int position) {
+        if (!this.get(position).builtIn) {
+            formatter.format(
+                "Function[%d] -- name: %s, line: %d, type: %s\n",
+                position, getName(position), getLine(position), getType(position));
         }
     }
 
-    public VariableTable getVariableTable(int index) {
-        return this.get(index).get(0).getVariableTable();
+    //
+    public List<Function> getOverloadedFunctions(int position) {
+        return this.get(position).getFunctions();
     }
 
-    public VariableTable getVariableTable(String name) {
-        if (this.indexes.get(name) != null) {
-            return this.getVariableTable(this.indexes.get(name));
-        }
-        return null;
+    //
+    public VariableTable getVariableTable(int position) {
+        return this.get(position).getLastVariableTable();
     }
 
-    public VariableTable getVariableTable() {
-        return this.getVariableTable(this.current - 1);
+    //
+    public VariableTable getLastVariableTable() {
+        return this.get(this.currentID - 1).getLastVariableTable();
     }
 
-    public int addVarInLastFunction(String name, Type type) {
-        return this.get(this.current - 1).get(0).addVariable(name, type);
+    //
+    public String getLastName() {
+        return this.getName(this.currentID - 1);
     }
 
-    public int addVarInLastFunction(String name, Type type, boolean param) {
-        return this.get(this.current - 1).get(0).addVariable(name, type, param);
-    }
-
-    public int getIndex(String string) {
-        return this.indexes.get(string);
-    }
-
-    public boolean contains(String string) {
-        return this.indexes.containsKey(string);
-    }
-
-    public String getName(int index) {
-        return this.get(index).get(0).getName();
-    }
-
-    public String getName() {
-        return this.getName(this.current - 1);
-    }
-
-    public int getLine(int index) {
-        return this.get(index).get(0).getLine();
-    }
-
-    public Type getType(int index) {
-        return this.get(index).get(0).getType();
-    }
-
-    public Type getType(String name) {
-        int idx = this.indexes.get(name);
-        return this.get(idx).get(0).getType();
-    }
-
-
-    public List<Function> getOverloadedFunctions(String name) {
-        int idx = this.indexes.get(name);
-        return this.get(idx);
-    }
-
-    public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        Formatter formatter = new Formatter(stringBuilder);
-
-        formatter.format("Function table:\n");
-
-        for (int i = 0; i < this.size(); i++) {
-            // Não imprime as funções built-in
-            if (!get(i).get(0).builtIn) {
-                formatter.format(
-                "Function %d -- name: %s, line: %d, type: %s\n",
-                i, getName(i), getLine(i), getType(i).toString());
-            }
-        }
-
-        formatter.close();
-
-        return stringBuilder.toString();
+    //
+    public int addVarInLastFunction(String name, Type type, boolean parameter) {
+        return this.get(this.currentID - 1).addVariableInLastFunction(name, type, parameter);
     }
 }

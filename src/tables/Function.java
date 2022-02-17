@@ -3,27 +3,20 @@ package tables;
 import typing.Type;
 
 public class Function extends Entry {
-    protected boolean builtIn = false;
     private int parametersQuantity = 0;
     private VariableTable variableTable = new VariableTable();
 
     public Function(String name, int line, Type type) {
         super(name, line, type);
-        this.builtIn = false;
-    }
-
-    public Function(String name, int line, Type type, boolean builtIn) {
-        super(name, line, type);
-        this.builtIn = builtIn;
     }
 
     public int addVariable(String name, Type type) {
-        return this.variableTable.put(name, this.line, type);
+        return this.variableTable.add(name, this.line, type);
     }
 
-    public int addVariable(String name, Type type, boolean param) {
+    public int addVariable(String name, int line, Type type, boolean param) {
         if (param) this.parametersQuantity++;
-        return this.variableTable.put(name, this.line, type);
+        return this.variableTable.add(name, this.line, type);
     }
 
     public VariableTable getVariableTable() {

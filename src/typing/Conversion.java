@@ -45,12 +45,6 @@ public enum Conversion {
             this.leftConversion = lc;
             this.rightConversion = rc;
         }
-
-        // public Unified(Type type, Conversion lc, Conversion rc) {
-        //     this.type = type;
-        //     this.leftConversion = lc;
-        //     this.rightConversion = rc;
-        // }
     }
 }
 

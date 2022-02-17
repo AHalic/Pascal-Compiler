@@ -9,6 +9,7 @@ import parser.PascalParser;
 import parser.PascalParserBaseVisitor;
 import tables.Function;
 import tables.FunctionTable;
+import tables.StringEntry;
 import tables.StringTable;
 import tables.VariableTable;
 import typing.Conversion;
@@ -21,13 +22,14 @@ import array.Array;
 import array.Range;
 
 import exception.SemanticException;
+import exception.TypeException;
 import exception.NotImplementedException;
 import static typing.Conversion.*;
 
 public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     private StringTable stringTable = new StringTable();
-    private FunctionTable functionTable = new FunctionTable();
+    private FunctionTable functionTable = new FunctionTable(true);
     
     /* Cria a tabela de variáveis e o ponteiro para não ser preciso
        diferenciar se a tabela é da função ou do programa. */
@@ -37,7 +39,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     Type lastDeclaredType;
     Range lastDeclaredRange;
-    Array lastArrayDeclared;
+    Array lastDeclaredArray;
     Scope currentScope = Scope.PROGRAM;
 
     //
@@ -53,7 +55,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             int idx = functionTable.getIndex(text);
             Function validFunction = null;
 
-            for (Function function: functionTable.getFunctions(text)) {
+            for (var function: functionTable.get(text).getFunctions()) {
                 if (function.getVariableTable().size() == 1) {
                     validFunction = function;
                     break;
@@ -65,8 +67,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 return new AST(FUNC_USE_NODE, idx, validFunction.getType());
             }
 
-            // Achou, verifica se foi informado menos parâmetros do que o necessário
-            checkMissingParameters(0, functionTable.get(text), line);
+            // Não achou, verifica se foi informado menos parâmetros do que o necessário
+            checkMissingParameters(0, functionTable.get(text).getOverloaded(0), line);
         }
 
         // Verifica se existe na tabela de variáveis
@@ -102,11 +104,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         
         // Verifica se é uma array ou um tipo normal
         if (lastDeclaredType == ARRAY_TYPE) {
-            lastArrayDeclared.setName(text);
-            int idx = variableTable.put(lastArrayDeclared);
+            lastDeclaredArray.setName(text);
+            int idx = variableTable.add(lastDeclaredArray);
             return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
         } else {
-            int idx = variableTable.put(text, line, lastDeclaredType);
+            int idx = variableTable.add(text, line, lastDeclaredType);
             return new AST(VAR_DECL_NODE, idx, lastDeclaredType);
         }
     }
@@ -115,6 +117,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitProcedureStatement(ProcedureStatementContext ctx) {
         String name = ctx.identifier().IDENT().getSymbol().getText().toLowerCase();
+        int idx = this.functionTable.getIndex(name);
         int line = ctx.identifier().IDENT().getSymbol().getLine();
         List<ActualParameterContext> list = new ArrayList<ActualParameterContext>();
 
@@ -130,14 +133,14 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         // Árvore de chamada de função
         AST node = AST.newSubtree(
             FUNC_USE_NODE,
-            functionTable.getType(name),
-            functionTable.getIndex(name));
+            functionTable.getType(idx),
+            idx);
             
         /* Variáveis para buscar se existe alguma função válida que possui
            dentro da lista de funções de nome "name". Na prática, apenas
            funções built-in terão sobrecarga. */
         boolean validFunction = false;
-        List<Function> functions = this.functionTable.getOverloadedFunctions(name);
+        List<Function> functions = this.functionTable.getOverloadedFunctions(idx);
         List<Type> types = new ArrayList<>();
         Function function = functions.get(0);
         VariableTable table = function.getVariableTable();
@@ -157,7 +160,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                         //
                         if (i == list.size() - 1) validFunction = true;
                     }
-                } catch (SemanticException error) {
+                } catch (TypeException error) {
                     /* Função errada, limpa o nó de variáveis. Limpa apenas se tiver
                        mais uma para ler, para manter sempre o último parâmetro salvo. */
                     if (j + 1 != functions.size() - 1) {
@@ -168,7 +171,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                     }
                 }
 
-                //
+                // Para, caso tenha encontrando a declaração correspondente
                 if ((validFunction)) break;
 
                 if (j + 1 < functions.size() - 1) {
@@ -185,7 +188,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         return node;
     }
 
-    //
+    // Verifica o escopo em que o break está sendo chamando
     private void checkScope(String name, int lineNo) {
         if (name.equals("break") && this.currentScope != Scope.WHILE) {
             throw new SemanticException(String.format(
@@ -196,7 +199,9 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     // Visita o nó de criação de string
     @Override
     public AST visitExprStrVal(ExprStrValContext ctx) {
-        int idx = stringTable.add(ctx.string().getText().toLowerCase());
+        int idx = stringTable.add(new StringEntry(
+            ctx.string().getText().toLowerCase(),
+            ctx.string().STRING_LITERAL().getSymbol().getLine()));
         return new AST(STR_VAL_NODE, idx, STR_TYPE);
     }
 
@@ -204,7 +209,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitVariableDeclarationPart(VariableDeclarationPartContext ctx) {
         AST node = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
-
+        
         for (var varList : ctx.variableDeclaration()) {
             List<IdentifierContext> idList = varList.identifierList().identifier();
             visit(varList.type_());
@@ -295,20 +300,23 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     }
 
     public AST visitFunctionDesignator(FunctionDesignatorContext ctx) {
+        // Verifica se a função foi declarada para evitar acessos inválidos
+        checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
+
         String name = ctx.identifier().getText().toLowerCase();
         int line = ctx.identifier().IDENT().getSymbol().getLine();
-        VariableTable table = functionTable.getVariableTable(name);
+        int idx = this.functionTable.getIndex(name);
+        VariableTable table = functionTable.getVariableTable(idx);
         List<ActualParameterContext> list = ctx.parameterList().actualParameter();
         
         // Árvore de chamada de função
         AST node = AST.newSubtree(
             FUNC_USE_NODE,
-            functionTable.getType(name),
-            functionTable.getIndex(name));
+            functionTable.getOverloadedFunctions(idx).get(0).getType(),
+            idx);
             
         // Verifica se os parâmetros estão certos
-        checkNotExistsFunction(ctx.identifier().IDENT().getSymbol());
-        checkMissingParameters(list.size(), functionTable.get(name), line);
+        checkMissingParameters(list.size(), functionTable.get(name).getOverloaded(0), line);
         checkExtraParameters(list, table, line);
 
         // Insere todos parâmetros no nó de chamada de função
@@ -356,7 +364,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             "line %d: incompatible types for operator '%s'," +
             " LHS is '%s' and RHS is '%s'.",
             lineNo, op, t1.toString(), t2.toString());
-        throw new SemanticException(message);
+        throw new TypeException(message);
     }
 
     private static void checkBoolExpr(int lineNo, String cmd, Type t) {
@@ -431,6 +439,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                 return new AST(exprNode.kind, exprNode.intData*(-1), INT_TYPE);
             }
         }
+
         return exprNode;
     }
 
@@ -474,7 +483,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
     public AST visitArrayType(ArrayTypeContext ctx) {
         visit(ctx.componentType().type_());
-        this.lastArrayDeclared = new Array(
+        this.lastDeclaredArray = new Array(
             "",
             ctx.ARRAY().getSymbol().getLine(),
             ARRAY_TYPE,
@@ -483,7 +492,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         for (var typeContext : ctx.typeList().indexType()) {
             visit(typeContext);
             checkArrayLimits(ctx.ARRAY().getSymbol().getLine());
-            lastArrayDeclared.addRange(lastDeclaredRange);
+            lastDeclaredArray.addRange(lastDeclaredRange);
         }
         
         this.lastDeclaredType = Type.ARRAY_TYPE;
@@ -652,7 +661,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         checkExistsFunction(ctx.identifier().IDENT().getSymbol());
 
         // Cria a função para inserir na tabela
-        int idx = this.functionTable.put(new Function(
+        int idx = this.functionTable.add(new Function(
             ctx.identifier().getText().toLowerCase(),
             ctx.identifier().IDENT().getSymbol().getLine(),
             functionType));
@@ -660,7 +669,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         //
         Scope lastScope = this.currentScope;
         this.currentScope = Scope.FUNCTION;
-        this.variableTable = this.functionTable.getVariableTable();
+        this.variableTable = this.functionTable.getLastVariableTable();
 
         // cria o nó da função
         AST funcNode = AST.ASTWithFunctionScope(FUNCTION_NODE, idx, functionType);
@@ -673,7 +682,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         } else {
             // Não tem parâmetros, apenas insere a variável da função
             varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
-            idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
+            idx = functionTable.addVarInLastFunction(functionTable.getLastName(), lastDeclaredType, false);
             varsSect.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
         }
         
@@ -704,7 +713,6 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             String message = String.format(
                 "line %d: A function declaration already exists for '%s'.",
                 token.getLine(), token.getText().toLowerCase());
-
             throw new SemanticException(message);
         }
     }
@@ -725,7 +733,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         AST params = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
 
         //
-        int idx = functionTable.addVarInLastFunction(functionTable.getName(), lastDeclaredType);
+        int idx = functionTable.addVarInLastFunction(functionTable.getLastName(), lastDeclaredType, false);
         params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
 
         for (var context : ctx.formalParameterSection()) {
@@ -735,7 +743,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             IdentifierListContext list = context.parameterGroup().identifierList();
 
             for (var identifier : list.identifier()) {
-                idx = functionTable.addVarInLastFunction(identifier.getText().toLowerCase(), lastDeclaredType,true);
+                idx = functionTable.addVarInLastFunction(identifier.getText().toLowerCase(), lastDeclaredType, true);
                 params.addChild(new AST(VAR_DECL_NODE, idx, lastDeclaredType));
             }
         }
@@ -746,17 +754,21 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
     @Override
     public AST visitFactor(FactorContext ctx) {
-        if (ctx.variable() != null)
+        if (ctx.variable() != null) {
             return visit(ctx.variable());
+        }
         
-        if (ctx.LPAREN() != null)
-        return visit(ctx.expression());
+        if (ctx.LPAREN() != null) {
+            return visit(ctx.expression());
+        }
 
-        if (ctx.functionDesignator() != null)
+        if (ctx.functionDesignator() != null) {
             return visit(ctx.functionDesignator());
+        }
 
-        if (ctx.unsignedConstant() != null)
+        if (ctx.unsignedConstant() != null) {
             return visit(ctx.unsignedConstant());
+        }
             
         if (ctx.set_() != null) {
             int line = ctx.set_().LBRACK().getSymbol().getLine();
@@ -779,7 +791,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         throw new NotImplementedException(message);
     }
 
-    @Override // IF expression THEN statement (: ELSE statement)?
+    // Visita a declaração do bloco lógico IF-THEN-ELSE
+    @Override
     public AST visitIfStatement(IfStatementContext ctx) {
         // Analisa a expressão booleana.
         AST exprNode = visit(ctx.expression());
@@ -788,7 +801,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         // Constrói o bloco da condicional.
         if (ctx.ELSE() == null) {
-            return AST.newSubtree(IF_NODE, NO_TYPE, thenNode, exprNode);
+            return AST.newSubtree(IF_NODE, NO_TYPE, exprNode, thenNode);
         } 
         else {
             AST elseNode = createStatementBlockNode(ctx.statement(1));
@@ -800,7 +813,8 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     public AST createStatementBlockNode(StatementContext ctx) {
         UnlabelledStatementContext unlabelled = ctx.unlabelledStatement();
         if ((unlabelled.structuredStatement() != null) &&
-            (unlabelled.structuredStatement().compoundStatement() != null)) {
+            ((unlabelled.structuredStatement().compoundStatement() != null) ||
+             (unlabelled.structuredStatement().conditionalStatement() != null))) {
             //
             return visit(unlabelled.structuredStatement());
         }
@@ -821,13 +835,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         Scope lastScope = currentScope;
         currentScope = Scope.WHILE;
         
-        // Constrói o bloco de código do loop.
+        // Constrói o bloco de código do loop e volta para o escopo anterior
         AST blockNode = createStatementBlockNode(ctx.statement());
-
-        // Volta para o escopo anterior
         currentScope = lastScope;
 
-        return AST.newSubtree(REPEAT_NODE, NO_TYPE, blockNode, exprNode);
+        return AST.newSubtree(REPEAT_NODE, NO_TYPE, exprNode, blockNode);
     }
 
     //

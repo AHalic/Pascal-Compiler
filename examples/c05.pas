@@ -10,7 +10,7 @@ var
 begin
   writeln('Please enter an integer between 0 and 100');
   read(number);
-  while (number < 0) or (number > 100) do begin
+  while (number < 0) and (number > 100) do begin
      writeln('Try again please, integer between 0 and 100');
      read(number);
   end;

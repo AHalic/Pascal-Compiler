@@ -332,17 +332,6 @@ expression
    : simpleExpression (relationaloperator expression)?
    ;
 
-//relationaloperator
-//   : EQUAL
-//   | NOT_EQUAL
-//   | LT
-//   | LE
-//   | GE
-//   | GT
-//   | IN
-//   ;
-
-// TODO: Pode dar problema.
 relationaloperator
    : operator=(EQUAL | NOT_EQUAL | LT | LE | GE | GT | IN)
    ;
