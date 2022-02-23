@@ -13,12 +13,14 @@ public class VariableTable extends Table<Entry> {
 
     protected void getString(Formatter formatter, int position) {
         formatter.format(
-                "Entry[%d] -- name: %s, line: %d, type: %s\n",
+                "Entry[%d] -- name: %s, line: %d, type: %s",
                 position, getName(position), getLine(position), getType(position));
 
             // Se for um array, imprime o tipo
             if (getType(position) == Type.ARRAY_TYPE) {
                 formatter.format("_" + ((Array)get(position)).getComponentType());
             }
+
+            formatter.format("\n");
     }
 }

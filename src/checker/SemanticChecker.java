@@ -258,7 +258,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
             AST node = AST.newSubtree(SUBSCRIPT_NODE, array.componentType);
             Token token = ctx.identifier(0).IDENT().getSymbol();
 
-            // Adiciona o array como primeiro elemento do subscription
+            // Adiciona o array como primeiro elemento do subscript
             node.addChild(
                 new AST(
                     VAR_USE_NODE,
@@ -266,9 +266,18 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
                     ARRAY_TYPE)
                 );
             
-            // Adiciona os índices como elementos do subscription
+            // Adiciona os índices como elementos do subscript
             for (var range : ctx.expression()) {
-                node.addChild(visit(range));
+                AST exprNode = visit(range);
+
+                if (exprNode.type != INT_TYPE) {
+                    String msg = String.format(
+                        "line %d: array index type('%s') is incompatible, index must be an integer.",
+                        token.getLine(), exprNode.type);
+                    throw new TypeException(msg);
+                }
+
+                node.addChild(exprNode);
             }
 
             checkSubscriptDimension(ctx.expression().size(), array, token);
