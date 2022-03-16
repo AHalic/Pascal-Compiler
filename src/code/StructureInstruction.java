@@ -19,7 +19,6 @@ public final class StructureInstruction extends Instruction {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         Formatter f = new Formatter(sb);
-        f.format("%s", this.op.toString());
         
         // if (op.paramsCount == 1)
         //     f.format(" %s", this.o1);
@@ -30,16 +29,31 @@ public final class StructureInstruction extends Instruction {
 
         switch (this.op.name) {
             case ".class":
-                f.format(" %s", this.o1);
+                f.format(".class %s", this.o1);
+                break;
+
+            case ".super":
+                f.format(".super %s", this.op.body);
                 break;
         
             case ".method":
-                f.format(" %s(%s)%s", this.o1, this.o2, this.o3);
+                f.format(".method %s %s(%s)%s", this.op.body, this.o1, this.o2, this.o3);
                 break;
 
             case ".limit":
-                f.format(" %s %s", this.o1, this.o2);
+                f.format("    .limit %s %s", this.o1, this.o2);
                 break;
+
+            default:
+                if (this.o1.equals("")) {
+                    f.format("%s", this.op.name);
+                } else if (this.o2.equals("")) {
+                    f.format("%s %s", this.op.name, this.o1);
+                } else if (this.o3.equals("")) {
+                    f.format("%s %s %s", this.op.name, this.o1, this.o2);
+                } else {
+                    f.format("%s %s %s %s", this.op.name, this.o1, this.o2, this.o3);
+                }
         }
 
         f.close();

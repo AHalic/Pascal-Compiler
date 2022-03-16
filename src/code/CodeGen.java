@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import ast.AST;
 import ast.ASTBaseVisitor;
+import ast.NodeKind;
 import tables.StringTable;
 import tables.VariableTable;
 import typing.Type;
@@ -38,10 +39,25 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     public void execute(AST root) throws IOException {
         nextInstr = 0;
-        // dumpStrTable();
         visit(root);
         // emit(HALT);
         dumpProgram();
+    }
+
+    void dumpStrTable() {
+        // Emite um espaço para melhor legibilidade
+        emit(Structure.space);
+        emit(Structure.comment, "   ; STR TABLE");
+
+        // Começa em 1 porque o 0 é o nome do programa
+        for (int i = 1; i < st.size(); i++) {
+            emit(OpCode.ldc, st.get(i).getName());
+            emit(OpCode.astore, Integer.toString(i - 1));
+        }
+
+        // Emite um espaço para melhor legibilidade
+        emit(Structure.comment, "   ; END STR TABLE");
+        emit(Structure.space);
     }
 
     void dumpProgram() throws IOException {
@@ -56,6 +72,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         // Emite as instruções de declaração de programa
         emit(Structure.programDeclaration, st.getName(0));
         emit(Structure.objectInheritance);
+        emit(Structure.space);
 
         // VarList node
         if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
@@ -66,7 +83,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         // Emite declaração da main e o tamanho da stack e locals
         emit(Structure.methodDeclaration, "main", "[Ljava/lang/String;", "V");
         emit(Structure.limit, "stack", "65535");
-        emit(Structure.limit, "locals", Integer.toString(this.vt.size()));
+        emit(Structure.limit, "locals", Integer.toString(this.vt.size() + this.st.size() - 1));
+        dumpStrTable();
 
         // Emite os códigos do block node
         if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2));
@@ -90,14 +108,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     protected Void visitVarUse(AST node) {
         System.out.println("VAR USE");
-        
+
+        int varIdx = node.intData + st.size() - 1;
+
         if (node.type == INT_TYPE) {
-            emit(OpCode.iload, node.intData);
+            emit(OpCode.iload, Integer.toString(varIdx));
         } else if (node.type == REAL_TYPE) {
-            emit(OpCode.fload, node.intData);
+            emit(OpCode.fload, Integer.toString(varIdx));
+        } else if (node.type == Type.STR_TYPE) {
+            emit(OpCode.aload, Integer.toString(varIdx));
+        } else {
+            System.out.println("FALTA IMPLEMENTAR AQUI!!!!");
         }
-        
-        // System.out.println(node);
 
         return null;
     }
@@ -149,7 +171,9 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         switch(node.type) {
             case INT_TYPE:  plusInt(node);    break;
             case REAL_TYPE: plusReal(node);   break;
-            // case STR_TYPE:  plusStr(node);    break;
+            case STR_TYPE:  plusStr(node);    break;
+            // Acho que isso era para o interpretador, no nosso caso acho
+            // que pode remover, mas por enquanto resolvi deixei
             case NO_TYPE:
             default:
                 System.err.printf("Invalid type: %s!\n",node.type.toString());
@@ -176,23 +200,37 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null; 
     }
 
-    // TODO Verificar utilização da tabela
-    // private Void plusStr(AST node) {
-    // 	visit(node.getChild(0));
-    // 	visit(node.getChild(1));
-    //     int r = stack.popi();
-    //     int l = stack.popi();
-    //     String ls = st.get(l).getName();
-    //     String rs = st.get(r).getName();
-    //     StringBuilder sb = new StringBuilder();
+    private Void plusStr(AST node) {
+        // Emite a criação de um stringBuilder
+        emit(OpCode.create, "java/lang/StringBuilder");
+        emit(OpCode.dup);
+        emit(OpCode.invokespecial, "java/lang/StringBuilder.<init>()V");
+        visit(node.getChild(0));
+        emit(OpCode.invokevirtual, "java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+        
+        // Se ao lado direito for outra concatenação, percorre por questão de eficiência
+        AST plusNode = node.getChild(1);
 
-    //     sb.append(ls.substring(0, ls.length() - 1));
-    //     sb.append(rs.substring(1));
+        while (plusNode.kind == NodeKind.PLUS_NODE) {
+            visit(plusNode.getChild(0));
+            emit(OpCode.invokevirtual, "java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;");
 
-    //     int newStrIdx = st.addStr(sb.toString());
-    //     stack.pushi(newStrIdx);
-    //     return null;
-    // }
+            if (plusNode.getChild(1).getChildCount() > 0) {
+                plusNode = plusNode.getChild(1);
+            } else {
+                break;
+            }
+        }
+
+        // Emite o valor do lado direito
+        visit(plusNode.getChild(1));
+        emit(OpCode.invokevirtual, "java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+        
+        // Transforma o valor do builder em string e joga na pilha
+        emit(OpCode.invokevirtual, "java/lang/StringBuilder.toString()Ljava/lang/String;");
+
+        return null;
+    }
 
     @Override
     protected Void visitVarDecl(AST node) {
@@ -240,9 +278,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitIntVal(AST node) {
-        // stack.pushi(node.intData);
         System.out.println("INTVAL");
-        emit(OpCode.ldc, node.intData);
+        emit(OpCode.ldc, Integer.toString(node.intData));
         return null; 
     }
 
@@ -254,7 +291,9 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitStrVal(AST node) {
-        stack.pushi(node.intData);
+        // Pega a referência, como é uma string devemos subtrair 1,
+        // pois o nome do código é registrado como a string 0.
+        emit(OpCode.aload, Integer.toString(node.intData - 1));
         return null;
     }
 
@@ -264,13 +303,15 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         AST rexpr = node.getChild(1);
         visit(rexpr);
 
-        int varIdx = node.getChild(0).intData;
-        Type varType = vt.getType(varIdx);
+        int varIdx = node.getChild(0).intData + st.size() - 1;
+        Type varType = vt.getType(node.getChild(0).intData);
         
         if (varType == INT_TYPE) {
-            emit(OpCode.istore, varIdx);
+            emit(OpCode.istore, Integer.toString(varIdx));
         } else if (varType == REAL_TYPE) {
-            emit(OpCode.fstore, varIdx);
+            emit(OpCode.fstore, Integer.toString(varIdx));
+        } else if (varType == Type.STR_TYPE) {
+            emit(OpCode.astore, Integer.toString(varIdx));
         }
 
         return null;
@@ -315,7 +356,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(op, o1, o2, "");
     }
 
-    private void emit(OpCode op, int o1, int o2, int o3) {
+    private void emit(OpCode op, String o1, String o2, String o3) {
         Instruction instr = new OpInstruction(op, o1, o2, o3);
         code[nextInstr] = instr;
         nextInstr++;
@@ -323,22 +364,22 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     
     private void emit(OpCode op) {
-        emit(op, 0, 0, 0);
+        emit(op, null, null, null);
     }
     
-    private void emit(OpCode op, int o1) {
-        emit(op, o1, 0, 0);
+    private void emit(OpCode op, String o1) {
+        emit(op, o1, null, null);
     }
     
-    private void emit(OpCode op, int o1, int o2) {
-        emit(op, o1, o2, 0);
+    private void emit(OpCode op, String o1, String o2) {
+        emit(op, o1, o2, null);
     }
 
-    private void backpatchJump(int instrAddr, int jumpAddr) {
-        ((OpInstruction)code[instrAddr]).o1 = jumpAddr;
-    }
+    // private void backpatchJump(int instrAddr, int jumpAddr) {
+    //     ((OpInstruction)code[instrAddr]).o1 = jumpAddr;
+    // }
 
-    private void backpatchBranch(int instrAddr, int offset) {
-        ((OpInstruction)code[instrAddr]).o2 = offset;
-    }
+    // private void backpatchBranch(int instrAddr, int offset) {
+    //     ((OpInstruction)code[instrAddr]).o2 = offset;
+    // }
 }

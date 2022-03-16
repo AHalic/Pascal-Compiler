@@ -1,10 +1,11 @@
 program HelloWorld;
 
 var
-    number0: integer;
-    number1: integer;
-    number2: integer;
+    txt0: string;
+    txt1: string;
+    txt2: string;
 begin
-    number0 := 10;
-    number1 := 90 + number0;
+    txt0 := 'Marquinho' + ' do ' + 'Playson';
+    txt1 := 'teste';
+    txt2 := txt0 + ': ' + 'FAMOSO CABEÇÃO FANTÁSTICO!';
 end.

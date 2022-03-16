@@ -2,6 +2,8 @@ package code;
 
 public enum Structure {
     // Bytecode structures
+    space("", "", 0),
+    comment("", "", 1),
     programDeclaration(".class", "public", 1),
     methodDeclaration(".method", "public static", 3),
     endMethod(".end method", "", 0),

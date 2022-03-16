@@ -8,7 +8,7 @@ public class Entry {
     protected Type type;
 
     public Entry(String name, int line, Type type) {
-        this.name = name;
+        this.name = name.replaceAll("\'", "\"");
         this.line = line;
         this.type = type;
     }

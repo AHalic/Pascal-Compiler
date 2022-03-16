@@ -150,7 +150,7 @@ public class AST {
             if (this.kind == NodeKind.REAL_VAL_NODE) {
                 System.err.printf("%.2f", this.floatData);
             } else if (this.kind == NodeKind.STR_VAL_NODE) {
-                System.err.printf("'%s'", st.get(this.intData));
+                System.err.printf("%s", st.get(this.intData).getName().replace("\"", "\'"));
                 System.err.printf("@%d", this.intData);
             } else if (this.kind == NodeKind.FUNC_USE_NODE) {
                 System.err.printf("@%d", this.intData);
