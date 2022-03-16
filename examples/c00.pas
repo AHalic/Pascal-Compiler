@@ -1,12 +1,10 @@
 program HelloWorld;
 
 var
-    number0: real;
-    number1: real;
+    number0: integer;
+    number1: integer;
     number2: integer;
 begin
-    number1 := 1;
-    // number0 := 3;
-    // number1 := 56;
-    // readln(number0);
+    number0 := 10;
+    number1 := 90 + number0;
 end.

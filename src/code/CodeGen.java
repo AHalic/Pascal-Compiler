@@ -90,6 +90,13 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     protected Void visitVarUse(AST node) {
         System.out.println("VAR USE");
+        
+        if (node.type == INT_TYPE) {
+            emit(OpCode.iload, node.intData);
+        } else if (node.type == REAL_TYPE) {
+            emit(OpCode.fload, node.intData);
+        }
+        
         // System.out.println(node);
 
         return null;

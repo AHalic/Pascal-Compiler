@@ -9,8 +9,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.Buffer;
 
 import code.CodeGen;
 import checker.SemanticChecker;
