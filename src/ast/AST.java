@@ -59,6 +59,10 @@ public class AST {
         return this.children.get(idx);
     }
 
+    public int getChildCount() {
+		return this.children.size();
+	}
+
     // Cria um nó e pendura todos os filhos passados como argumento.
     public static AST newSubtree(NodeKind kind, Type type, AST... children) {
         AST node = new AST(kind, 0, type);

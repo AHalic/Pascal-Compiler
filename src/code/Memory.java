@@ -2,12 +2,12 @@ package code;
 
 import java.util.Vector;
 
-import tables.VarTable;
+import tables.VariableTable;
 
 @SuppressWarnings("serial")
 public final class Memory extends Vector<Word> {
 
-	public Memory(VarTable vt) {
+	public Memory(VariableTable vt) {
 		for (int i = 0; i < vt.size(); i++) {
 			this.add(Word.fromInt(0));
 		}
