@@ -61,6 +61,104 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 	}
 
     @Override
+	protected Void visitTimes(AST node) {
+		visit(node.getChild(0));
+		visit(node.getChild(1));
+		if (node.type == INT_TYPE) {
+	        int r = stack.popi();
+	        int l = stack.popi();
+	        stack.pushi(l * r);
+	    } else { 
+	        float r = stack.popf();
+	        float l = stack.popf();
+	        stack.pushf(l * r);
+	    }
+		return null;
+	}
+
+    @Override
+	protected Void visitMinus(AST node) {
+		visit(node.getChild(0));
+		visit(node.getChild(1));
+		if (node.type == INT_TYPE) {
+	        int r = stack.popi();
+	        int l = stack.popi();
+	        stack.pushi(l - r);
+	    } else { 
+	        float r = stack.popf();
+	        float l = stack.popf();
+	        stack.pushf(l - r);
+	    }
+		return null; 
+	}
+
+    @Override
+	protected Void visitOver(AST node) {
+		visit(node.getChild(0));
+		visit(node.getChild(1));
+		if (node.type == INT_TYPE) {
+	        int r = stack.popi();
+	        int l = stack.popi();
+	        stack.pushi(l / r);
+	    } else {
+	        float r = stack.popf();
+	        float l = stack.popf();
+	        stack.pushf(l / r);
+	    }
+		return null;
+	}
+
+    @Override
+	protected Void visitPlus(AST node) {
+		switch(node.type) {
+			case INT_TYPE:  plusInt(node);    break;
+	        case REAL_TYPE: plusReal(node);   break;
+	        // case STR_TYPE:  plusStr(node);    break;
+			case NO_TYPE:
+		    default:
+	            System.err.printf("Invalid type: %s!\n",node.type.toString());
+	            System.exit(1);
+		}
+		return null; 
+    }
+
+    private Void plusInt(AST node) {
+		visit(node.getChild(0));
+		visit(node.getChild(1));
+	    int r = stack.popi();
+	    int l = stack.popi();
+	    stack.pushi(l + r);
+	    return null; 
+	}
+
+	private Void plusReal(AST node) {
+		visit(node.getChild(0));
+		visit(node.getChild(1));
+	    float r = stack.popf();
+	    float l = stack.popf();
+	    stack.pushf(l + r);
+	    return null; 
+	}
+
+    // TODO Verificar utilização da tabela
+    // private Void plusStr(AST node) {
+	// 	visit(node.getChild(0));
+	// 	visit(node.getChild(1));
+	//     int r = stack.popi();
+	//     int l = stack.popi();
+	//     String ls = st.get(l).getName();
+	//     String rs = st.get(r).getName();
+	//     StringBuilder sb = new StringBuilder();
+
+	//     sb.append(ls.substring(0, ls.length() - 1));
+	//     sb.append(rs.substring(1));
+
+	//     int newStrIdx = st.addStr(sb.toString());
+	//     stack.pushi(newStrIdx);
+	//     return null;
+    // }
+
+    @Override
 	protected Void visitVarDecl(AST node) {
 		return null; 
 	}
@@ -112,6 +210,17 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 			memory.storei(varIdx, stack.popi());
 		}
 		return null;
+	}
+
+    @Override
+	protected Void visitRepeat(AST node) {
+		int again = 1;
+	    while (again == 1) {
+	    	visit(node.getChild(0)); 
+			visit(node.getChild(1)); 
+	        again = (stack.popi() == 0? 1 : 0); 
+	    }
+	    return null;
 	}
 
     @Override

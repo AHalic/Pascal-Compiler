@@ -22,16 +22,16 @@ public abstract class ASTBaseVisitor<T> {
             // case LE_NODE:           return visitLe(node);
             // case GE_NODE:           return visitGe(node);
             // case NOT_EQUAL_NODE:    return visitNotEqual(node);
-            // case MINUS_NODE:        return visitMinus(node);
-	        // case OVER_NODE:         return visitOver(node);
-	        // case PLUS_NODE:         return visitPlus(node);
+            case MINUS_NODE:        return visitMinus(node);
+	        case OVER_NODE:         return visitOver(node);
+	        case PLUS_NODE:         return visitPlus(node);
 	        case PROGRAM_NODE:      return visitProgram(node);
             case FUNC_LIST_NODE:    return visitFuncList(node);
             // case FUNCTION_NODE:     return visitFunction(node);
             case REAL_VAL_NODE:     return visitRealVal(node);
-            // case REPEAT_NODE:       return visitRepeat(node);
+            case REPEAT_NODE:       return visitRepeat(node);
 	        case STR_VAL_NODE:      return visitStrVal(node);
-            // case TIMES_NODE:        return visitTimes(node);
+            case TIMES_NODE:        return visitTimes(node);
             // case AND_NODE:          return visitAnd(node);
             // case OR_NODE:           return visitOr(node);
             // case NOT_NODE:          return visitNot(node);
@@ -79,11 +79,11 @@ public abstract class ASTBaseVisitor<T> {
             
     // protected abstract T visitNotEqual(AST node);
     
-    // protected abstract T visitMinus(AST node);
+    protected abstract T visitMinus(AST node);
             
-    // protected abstract T visitOver(AST node);
+    protected abstract T visitOver(AST node);
             
-    // protected abstract T visitPlus(AST node);
+    protected abstract T visitPlus(AST node);
             
     protected abstract T visitProgram(AST node);
     
@@ -93,11 +93,11 @@ public abstract class ASTBaseVisitor<T> {
     
     protected abstract T visitRealVal(AST node);
     
-    // protected abstract T visitRepeat(AST node);
+    protected abstract T visitRepeat(AST node);
         
     protected abstract T visitStrVal(AST node);
         
-    // protected abstract T visitTimes(AST node);
+    protected abstract T visitTimes(AST node);
         
     // protected abstract T visitAnd(AST node);
         
