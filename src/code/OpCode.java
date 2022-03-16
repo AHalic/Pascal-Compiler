@@ -1,9 +1,9 @@
 package code;
 
 public enum OpCode {
-	// ---------------------------------------------------
-	// Basic ops
-	
+    // ---------------------------------------------------
+    // Basic ops
+    
     HALT("HALT", 0),
     NOOP("NOOP", 0),
 
@@ -84,36 +84,36 @@ public enum OpCode {
     // System calls, for I/O (see below)
     
     CALL("CALL", 2); // CALL code, x
-	
-	// CALL (very basic simulation of OS system calls)
-	// . code: sets the operation to be called.
-	// . x: register involved in the operation.
-	// List of calls:
-	// ----------------------------------------------------------------------------
-	// code | x  | Description
-	// ----------- -----------------------------------------------------------
-	// 0   | ix | Read int:   register ix <- int  from stdin
-	// 1   | fx | Read real:  register fx <- real from stdin
-	// 2   | ix | Read bool:  register ix <- bool from stdin (as int)
-	// 3   | ix | Read str:   str_tab[ix] <- str from stdin
-	// 4   | ix | Write int:  stdout <- register ix (as str)
-	// 5   | fx | Write real: stdout <- register fx (as str)
-	// 6   | ix | Write bool: stdout <- register ix (as str)
-	// 7   | ix | Write str:  stdout <- str_tab[ix]
-	// ----------------------------------------------------------------------------
-	// OBS.: All strings in memory are null ('\0') terminated, like in C.
-	// ----------------------------------------------------------------------------
-	
-	public final String name;
-	public final int opCount;
-	
-	private OpCode(String name, int opCount) {
-		this.name = name;
-		this.opCount = opCount;
-	}
-	
-	public String toString() {
-		return this.name;
-	}
-	
+    
+    // CALL (very basic simulation of OS system calls)
+    // . code: sets the operation to be called.
+    // . x: register involved in the operation.
+    // List of calls:
+    // ----------------------------------------------------------------------------
+    // code | x  | Description
+    // ----------- -----------------------------------------------------------
+    // 0   | ix | Read int:   register ix <- int  from stdin
+    // 1   | fx | Read real:  register fx <- real from stdin
+    // 2   | ix | Read bool:  register ix <- bool from stdin (as int)
+    // 3   | ix | Read str:   str_tab[ix] <- str from stdin
+    // 4   | ix | Write int:  stdout <- register ix (as str)
+    // 5   | fx | Write real: stdout <- register fx (as str)
+    // 6   | ix | Write bool: stdout <- register ix (as str)
+    // 7   | ix | Write str:  stdout <- str_tab[ix]
+    // ----------------------------------------------------------------------------
+    // OBS.: All strings in memory are null ('\0') terminated, like in C.
+    // ----------------------------------------------------------------------------
+    
+    public final String name;
+    public final int opCount;
+    
+    private OpCode(String name, int opCount) {
+        this.name = name;
+        this.opCount = opCount;
+    }
+    
+    public String toString() {
+        return this.name;
+    }
+    
 }

@@ -11,10 +11,10 @@ public abstract class ASTBaseVisitor<T> {
         switch(node.kind) {
             case ASSIGN_NODE:       return visitAssign(node);
             // case EQ_NODE:           return visitEq(node);
-	        case BLOCK_NODE:        return visitBlock(node);
-	        case BOOL_VAL_NODE:     return visitBoolVal(node);
+            case BLOCK_NODE:        return visitBlock(node);
+            case BOOL_VAL_NODE:     return visitBoolVal(node);
             // case IF_NODE:           return visitIf(node);
-	        case INT_VAL_NODE:      return visitIntVal(node);
+            case INT_VAL_NODE:      return visitIntVal(node);
             // case NIL_VAL_NODE:      return visitNilVal(node);
             // case ARRAY_NODE:        return visitArray(node);
             // case LT_NODE:           return visitLt(node);
@@ -23,14 +23,14 @@ public abstract class ASTBaseVisitor<T> {
             // case GE_NODE:           return visitGe(node);
             // case NOT_EQUAL_NODE:    return visitNotEqual(node);
             case MINUS_NODE:        return visitMinus(node);
-	        case OVER_NODE:         return visitOver(node);
-	        case PLUS_NODE:         return visitPlus(node);
-	        case PROGRAM_NODE:      return visitProgram(node);
+            case OVER_NODE:         return visitOver(node);
+            case PLUS_NODE:         return visitPlus(node);
+            case PROGRAM_NODE:      return visitProgram(node);
             case FUNC_LIST_NODE:    return visitFuncList(node);
             // case FUNCTION_NODE:     return visitFunction(node);
             case REAL_VAL_NODE:     return visitRealVal(node);
             case REPEAT_NODE:       return visitRepeat(node);
-	        case STR_VAL_NODE:      return visitStrVal(node);
+            case STR_VAL_NODE:      return visitStrVal(node);
             case TIMES_NODE:        return visitTimes(node);
             // case AND_NODE:          return visitAnd(node);
             // case OR_NODE:           return visitOr(node);
@@ -47,9 +47,9 @@ public abstract class ASTBaseVisitor<T> {
             // case REAL2STRING_NODE:  return visitREAL2STRING(node);
 
             default:
-	            System.err.printf("Invalid kind: %s!\n", node.kind.toString());
-	            System.exit(1);
-	            return null;
+                System.err.printf("Invalid kind: %s!\n", node.kind.toString());
+                System.exit(1);
+                return null;
         }   
     }
 
