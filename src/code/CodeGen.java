@@ -1,12 +1,12 @@
 package code;
 
+import static code.Instruction.INSTR_MEM_SIZE;
+
 import static typing.Type.INT_TYPE;
 import static typing.Type.REAL_TYPE;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.util.Scanner;
 
 import ast.AST;
 import ast.ASTBaseVisitor;
@@ -14,36 +14,58 @@ import tables.StringTable;
 import tables.VariableTable;
 import typing.Type;
 
-public final class Interpreter extends ASTBaseVisitor<Void> {
+public final class CodeGen extends ASTBaseVisitor<Void> {
     private final DataStack stack;
     private final Memory memory;
     private final StringTable st;
     private final VariableTable vt;
-    private final Scanner in;
+    private final BufferedWriter output;
 
-    public Interpreter(StringTable st, VariableTable vt) {
+    // Próxima posição na memória de código para emit.
+    private static int nextInstr;
+    private final Instruction code[]; // Code memory
+
+    public CodeGen(StringTable st, VariableTable vt, BufferedWriter output) {
+        this.code = new Instruction[INSTR_MEM_SIZE];
         this.stack = new DataStack();
         this.memory = new Memory(vt);
         this.st = st;
         this.vt = vt;
-        this.in = new Scanner(System.in);
+        this.output = output;
+    }
+
+    // Função principal para geração de código.
+    @Override
+    public void execute(AST root) throws IOException {
+        nextInstr = 0;
+        // dumpStrTable();
+        visit(root);
+        // emit(HALT);
+        dumpProgram();
+    }
+
+    void dumpProgram() throws IOException {
+        for (int addr = 0; addr < nextInstr; addr++) {
+            this.output.write(String.format("%s\n", code[addr].toString()));
+        }
+        this.output.flush();
     }
 
     @Override
     protected Void visitProgram(AST node) {
-        // deixar igual do block?
-        visit(node.getChild(0));
-
-        if (node.getChildCount() > 1) visit(node.getChild(1));
-        if (node.getChildCount() > 2) visit(node.getChild(2)); 
-        in.close(); 
+        // VarList node
+        // if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
+        // FunctionList node
+        // if (node.getChild(1).getChildCount() > 0) visit(node.getChild(1));
+        // Block node
+        if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2)); 
 
         return null; 
     }
 
     @Override
     protected Void visitBlock(AST node) {
-        for (int i = 0; i < node.getChildCount(); i++) {
+        for (int i = 0; i < node.getChildCount() - 1; i++) {
             visit(node.getChild(i));
         }
         return null;
@@ -51,12 +73,9 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitVarUse(AST node) {
-        int varIdx = node.intData;
-        if (node.type == REAL_TYPE) {
-            stack.pushf(memory.loadf(varIdx));
-        } else {
-            stack.pushi(memory.loadi(varIdx));
-        }
+        System.out.println("VAR USE");
+        // System.out.println(node);
+
         return null;
     }
 
@@ -160,16 +179,39 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitVarDecl(AST node) {
+        System.out.println("VAR_DECL");
         return null; 
     }
 
     @Override
     protected Void visitVarList(AST node) {
+        System.out.println("VAR_LIST");
+        visit(node.getChild(0));
         return null; 
     }
 
     @Override
     protected Void visitFuncList(AST node) {
+        System.out.println("FUNC LIST");
+        visit(node.getChild(0));
+        return null;
+    }
+
+    @Override
+    protected Void visitFunction(AST node) {
+        System.out.println("FUNCTION");
+        visit(node.getChild(0));
+        return null;
+    }
+
+    @Override
+    protected Void visitFuncUse(AST node) {
+        System.out.println("FUNC USE");
+
+        // Verifica se não é uma função sem parâmetros
+        if (node.getChildCount() > 0)
+            visit(node.getChild(0));
+
         return null;
     }
 
@@ -181,7 +223,9 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitIntVal(AST node) {
-        stack.pushi(node.intData);
+        // stack.pushi(node.intData);
+        System.out.println("INTVAL");
+        emit(OpCode.ldc, node.intData);
         return null; 
     }
 
@@ -199,16 +243,17 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitAssign(AST node) {
+        System.out.println("ASSIGN");
         AST rexpr = node.getChild(1);
         visit(rexpr);
 
         int varIdx = node.getChild(0).intData;
         Type varType = vt.getType(varIdx);
-        if (varType == REAL_TYPE) {
-            memory.storef(varIdx, stack.popf());
-        } else {
-            memory.storei(varIdx, stack.popi());
+        
+        if (varType == INT_TYPE) {
+            emit(OpCode.istore, varIdx);
         }
+
         return null;
     }
 
@@ -228,5 +273,33 @@ public final class Interpreter extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         stack.pushf((float) stack.popi());
         return null;
+    }
+
+    // Emits
+    
+    private void emit(OpCode op, int o1, int o2, int o3) {
+        Instruction instr = new Instruction(op, o1, o2, o3);
+        code[nextInstr] = instr;
+        nextInstr++;
+    }
+    
+    private void emit(OpCode op) {
+        emit(op, 0, 0, 0);
+    }
+    
+    private void emit(OpCode op, int o1) {
+        emit(op, o1, 0, 0);
+    }
+    
+    private void emit(OpCode op, int o1, int o2) {
+        emit(op, o1, o2, 0);
+    }
+
+    private void backpatchJump(int instrAddr, int jumpAddr) {
+        code[instrAddr].o1 = jumpAddr;
+    }
+
+    private void backpatchBranch(int instrAddr, int offset) {
+        code[instrAddr].o2 = offset;
     }
 }

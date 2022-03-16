@@ -1,6 +1,9 @@
 package code;
 
 public enum OpCode {
+    ldc("ldc", 1),
+    istore("istore", 1),
+
     // ---------------------------------------------------
     // Basic ops
     

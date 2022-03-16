@@ -1,9 +1,11 @@
 package ast;
 
+import java.io.IOException;
+
 import org.antlr.v4.parse.ANTLRParser.range_return;
 
 public abstract class ASTBaseVisitor<T> {
-    public void execute(AST root) {
+    public void execute(AST root) throws IOException {
         visit(root);
     }
 
@@ -27,7 +29,7 @@ public abstract class ASTBaseVisitor<T> {
             case PLUS_NODE:         return visitPlus(node);
             case PROGRAM_NODE:      return visitProgram(node);
             case FUNC_LIST_NODE:    return visitFuncList(node);
-            // case FUNCTION_NODE:     return visitFunction(node);
+            case FUNCTION_NODE:     return visitFunction(node);
             case REAL_VAL_NODE:     return visitRealVal(node);
             case REPEAT_NODE:       return visitRepeat(node);
             case STR_VAL_NODE:      return visitStrVal(node);
@@ -39,7 +41,7 @@ public abstract class ASTBaseVisitor<T> {
             case VAR_LIST_NODE:     return visitVarList(node);
             case VAR_USE_NODE:      return visitVarUse(node);
             // case SUBSCRIPT_NODE:    return visitSubscript(node);
-            // case FUNC_USE_NODE:     return visitFuncUse(node);
+            case FUNC_USE_NODE:     return visitFuncUse(node);
 
             // Só esse? Olhar em typing/Type
             case INT2REAL_NODE:     return visitINT2REAL(node);
@@ -89,7 +91,7 @@ public abstract class ASTBaseVisitor<T> {
     
     protected abstract T visitFuncList(AST node);
     
-    // protected abstract T visitFunction(AST node);
+    protected abstract T visitFunction(AST node);
     
     protected abstract T visitRealVal(AST node);
     
@@ -113,7 +115,7 @@ public abstract class ASTBaseVisitor<T> {
         
     // protected abstract T visitSubscript(AST node);
     
-    // protected abstract T visitFuncUse(AST node);
+    protected abstract T visitFuncUse(AST node);
     
     protected abstract T visitINT2REAL(AST node);
     

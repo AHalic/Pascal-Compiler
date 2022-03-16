@@ -28,12 +28,12 @@ import static typing.Conversion.*;
 
 public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
-    private StringTable stringTable = new StringTable();
-    private FunctionTable functionTable = new FunctionTable(true);
+    public final StringTable stringTable = new StringTable();
+    public final FunctionTable functionTable = new FunctionTable(true);
     
     /* Cria a tabela de variáveis e o ponteiro para não ser preciso
        diferenciar se a tabela é da função ou do programa. */
-    private VariableTable ProgramVariableTable = new VariableTable();
+    public final VariableTable ProgramVariableTable = new VariableTable();
     private VariableTable variableTable = ProgramVariableTable;
 
     //
@@ -81,6 +81,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         int idx = variableTable.getIndex(text);
         return new AST(VAR_USE_NODE, idx, variableTable.getType(idx));
+    }
+
+    // Retorna a AST construída ao final da análise.
+    public AST getAST() {
+        return this.root;
     }
 
     // Cria uma nova variável caso ainda não tenha sido declarada
