@@ -13,3 +13,7 @@ src/antlr/.antlr
 graph.png
 graph.pdf
 graph.dot
+
+# Eventuais bytecodes gerados durante testes
+*.class
+*.j

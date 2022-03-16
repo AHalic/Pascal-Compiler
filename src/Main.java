@@ -53,7 +53,7 @@ public class Main {
                     System.out.println("Parse successfull!");
 
                     checker.printTables();
-                    // checker.printAST();
+                    checker.printAST();
 
                     // Carrega o arquivo de saída
                     FileWriter tmp = new FileWriter(args[1]);

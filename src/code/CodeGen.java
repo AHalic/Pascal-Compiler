@@ -53,18 +53,34 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitProgram(AST node) {
+        // Emite as instruções de declaração de programa
+        emit(Structure.programDeclaration, st.getName(0));
+        emit(Structure.objectInheritance);
+
         // VarList node
-        // if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
+        if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
+
         // FunctionList node
-        // if (node.getChild(1).getChildCount() > 0) visit(node.getChild(1));
-        // Block node
-        if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2)); 
+        if (node.getChild(1).getChildCount() > 0) visit(node.getChild(1));
+
+        // Emite declaração da main e o tamanho da stack e locals
+        emit(Structure.methodDeclaration, "main", "[Ljava/lang/String;", "V");
+        emit(Structure.limit, "stack", "65535");
+        emit(Structure.limit, "locals", Integer.toString(this.vt.size()));
+
+        // Emite os códigos do block node
+        if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2));
+
+        // Emite o códigos de return e fim do método da main
+        emit(OpCode.returnProgram);
+        emit(Structure.endMethod); 
 
         return null; 
     }
 
     @Override
     protected Void visitBlock(AST node) {
+
         for (int i = 0; i < node.getChildCount() - 1; i++) {
             visit(node.getChild(i));
         }
@@ -97,17 +113,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitMinus(AST node) {
+        System.out.println("MINUS NODE");
         visit(node.getChild(0));
         visit(node.getChild(1));
-        if (node.type == INT_TYPE) {
-            int r = stack.popi();
-            int l = stack.popi();
-            stack.pushi(l - r);
-        } else { 
-            float r = stack.popf();
-            float l = stack.popf();
-            stack.pushf(l - r);
-        }
+        emit(OpCode.isub);
+
         return null; 
     }
 
@@ -144,9 +154,9 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private Void plusInt(AST node) {
         visit(node.getChild(0));
         visit(node.getChild(1));
-        int r = stack.popi();
-        int l = stack.popi();
-        stack.pushi(l + r);
+        emit(OpCode.iadd);
+        System.out.println("PLUS INT");
+
         return null; 
     }
 
@@ -252,6 +262,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         
         if (varType == INT_TYPE) {
             emit(OpCode.istore, varIdx);
+        } else if (varType == REAL_TYPE) {
+            emit(OpCode.fstore, varIdx);
         }
 
         return null;
@@ -271,17 +283,37 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     protected Void visitINT2REAL(AST node) {
         visit(node.getChild(0));
-        stack.pushf((float) stack.popi());
+        emit(OpCode.i2f);
         return null;
     }
 
     // Emits
-    
-    private void emit(OpCode op, int o1, int o2, int o3) {
-        Instruction instr = new Instruction(op, o1, o2, o3);
+
+    // Emite uma estrutura do bytecode
+    private void emit(Structure struct, String o1, String o2, String o3) {
+        StructureInstruction instr = new StructureInstruction(struct, o1, o2, o3);
         code[nextInstr] = instr;
         nextInstr++;
     }
+
+    private void emit(Structure op) {
+        emit(op, "", "", "");
+    }
+    
+    private void emit(Structure op, String o1) {
+        emit(op, o1, "", "");
+    }
+    
+    private void emit(Structure op, String o1, String o2) {
+        emit(op, o1, o2, "");
+    }
+
+    private void emit(OpCode op, int o1, int o2, int o3) {
+        Instruction instr = new OpInstruction(op, o1, o2, o3);
+        code[nextInstr] = instr;
+        nextInstr++;
+    }
+
     
     private void emit(OpCode op) {
         emit(op, 0, 0, 0);
@@ -296,10 +328,10 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     }
 
     private void backpatchJump(int instrAddr, int jumpAddr) {
-        code[instrAddr].o1 = jumpAddr;
+        ((OpInstruction)code[instrAddr]).o1 = jumpAddr;
     }
 
     private void backpatchBranch(int instrAddr, int offset) {
-        code[instrAddr].o2 = offset;
+        ((OpInstruction)code[instrAddr]).o2 = offset;
     }
 }

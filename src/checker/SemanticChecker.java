@@ -205,7 +205,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     @Override
     public AST visitExprStrVal(ExprStrValContext ctx) {
         int idx = stringTable.add(new StringEntry(
-            ctx.string().getText().toLowerCase(),
+            ctx.string().getText(),
             ctx.string().STRING_LITERAL().getSymbol().getLine()));
         return new AST(STR_VAL_NODE, idx, STR_TYPE);
     }
@@ -240,6 +240,11 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         AST varsSect = AST.newSubtree(VAR_LIST_NODE, NO_TYPE);
         AST funcSect = AST.newSubtree(FUNC_LIST_NODE, NO_TYPE);
         
+        //
+        stringTable.add(new StringEntry(
+            ctx.programHeading().identifier().IDENT().getSymbol().getText(),
+            ctx.programHeading().identifier().IDENT().getSymbol().getLine()));
+
         // Verifica se existe uma declaração de função
         for (var function : ctx.block().procedureAndFunctionDeclarationPart()) {
             if (function.procedureOrFunctionDeclaration() != null)

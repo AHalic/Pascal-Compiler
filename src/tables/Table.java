@@ -21,6 +21,11 @@ abstract public class Table<T extends tables.Entry> extends HashMap<Integer, T> 
     }
 
     //
+    public int size() {
+        return this.ID_.size();
+    }
+
+    //
     public T get(String name) {
         int idx = this.ID_.get(name);
         return this.get(idx);
