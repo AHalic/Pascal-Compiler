@@ -88,6 +88,10 @@ public class FunctionTable extends Table<FunctionWrapper> {
         return this.get(position).getLastVariableTable();
     }
     
+    public StringTable getStringTable(int position) {
+        return this.get(position).getLastStringTable();
+    }
+
     //
     public VariableTable getLastVariableTable() {
         return this.get(this.currentID - 1).getLastVariableTable();
