@@ -47,6 +47,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         this.output = output;
         this.currentVars = this.vt;
         this.currentStrings = this.st;
+        this.scope = Scope.PROGRAM;
     }
 
     // Função principal para geração de código.
@@ -144,7 +145,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         if (scope == Scope.PROGRAM) varIdx--;
 
         //
-        if (node.type == INT_TYPE) {
+        if (node.type == INT_TYPE || node.type == Type.BOOL_TYPE) {
             emit(OpCode.iload, Integer.toString(varIdx));
         } else if (node.type == REAL_TYPE) {
             emit(OpCode.fload, Integer.toString(varIdx));
@@ -302,6 +303,10 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
                 return "I";
             case REAL_TYPE:
                 return "F";
+            case STR_TYPE:
+                return "Ljava/lang/String;";
+            case BOOL_TYPE:
+                return "Z";
             default:
                 return null;
         }
@@ -359,7 +364,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         currentStrings = function.getStringTable();
 
         // TODO: Colocar a tabela de strings separadas por função
-        int localsNumber = currentVars.size() + function.getStringTable().size();
+        int localsNumber = currentVars.size() + function.getStringTable().size() + 1;
         emit(Structure.methodDeclaration, declaration);
         emit(Structure.limit, "stack", "65535");
         emit(Structure.limit, "locals", Integer.toString(localsNumber));
@@ -385,21 +390,63 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null;
     }
 
+    protected Boolean emitBuiltInFunction(AST node) {
+        Function builtin = null;
+
+        // Busca a função built-in com os parâmetros correto
+        for (var function: ft.get(node.intData).getFunctions()) {
+            VariableTable vt = function.getVariableTable();
+            Boolean finded = true;
+
+            for (int i = 1; i < vt.size(); i++) {
+                if (vt.getType(i) != node.getChild(i - 1).type) {
+                    finded = false;
+                    break;
+                }
+            }
+
+            if (finded) {
+                builtin = function;
+                break;
+            }
+        }
+
+        // Emite a função
+        switch (builtin.getName()) {
+            case "read":
+                System.out.println("BUILT-IN READ");
+                emitRead(node);
+                break;
+            case "write":
+                System.out.println("BUILT-IN WRITE");
+                emitWrite(node);
+                break;
+        }
+
+        return true;
+    }
+
     @Override
     protected Void visitFuncUse(AST node) {
         System.out.println("FUNC USE");
 
-        // Verifica se não é uma função sem parâmetros
-        if (node.getChildCount() > 0) {
-            for (int i = 0; i < node.getChildCount(); i++) {
-                visit(node.getChild(i));
+        /* Caso seja uma função built-in irá retornar false, caso contrário
+           o código da função é emitido */
+        if (!emitBuiltInFunction(node)) {
+            // Verifica se não é uma função sem parâmetros
+            if (node.getChildCount() > 0) {
+                // Caso tenha parâmetros temos que empilha-los na pilha
+                for (int i = 0; i < node.getChildCount(); i++) {
+                    visit(node.getChild(i));
+                }
             }
+    
+            // Emite a chamada da função
+            String program = st.getName(0);
+            String header = getFunctionDeclaration(ft.get(node.intData).getFunctions().get(0));
+            emit(OpCode.invokestatic, String.format("%s.%s", program, header));
         }
 
-        //
-        String program = st.getName(0);
-        String header = getFunctionDeclaration(ft.get(node.intData).getFunctions().get(0));
-        emit(OpCode.invokestatic, String.format("%s.%s", program, header));
 
         return null;
     }
@@ -420,7 +467,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitBoolVal(AST node) {
-        stack.pushi(node.intData);
+        System.out.println("BOOLVAL");
+        emit(OpCode.ldc, Integer.toString(node.intData));
         return null; 
     }
 
@@ -444,15 +492,19 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         AST rexpr = node.getChild(1);
         visit(rexpr);
 
-        int varIdx = node.getChild(0).intData + st.size() - 1;
+        int varIdx = node.getChild(0).intData + currentStrings.size();
 
-        //
-        // if (scope == Scope.PROGRAM) varIdx--;
+        if (scope == Scope.PROGRAM) varIdx--;
 
-        // TODO: Percorrer um for para achar o tipo da função, devido a sobrecarga
         Type varType = currentVars.getType(node.getChild(0).intData);
 
-        if (varType == INT_TYPE) {
+        emitStore(varType, varIdx);
+
+        return null;
+    }
+
+    protected Void emitStore(Type varType, int varIdx) {
+        if (varType == INT_TYPE || varType == Type.BOOL_TYPE) {
             emit(OpCode.istore, Integer.toString(varIdx));
         } else if (varType == REAL_TYPE) {
             emit(OpCode.fstore, Integer.toString(varIdx));
@@ -610,7 +662,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         nextInstr++;
     }
 
-    
     private void emit(OpCode op) {
         emit(op, null, null, null);
     }
@@ -621,6 +672,55 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     
     private void emit(OpCode op, String o1, String o2) {
         emit(op, o1, o2, null);
+    }
+
+    // Built-In functions
+    private void emitRead(AST node) {
+        Type type = node.getChild(0).type;
+        String typeName = "";
+        int varIdx = node.getChild(0).intData + currentStrings.size() - 1;
+
+        // Verifica o pos-append no nome do método do scanner
+        if (type == INT_TYPE) {
+            typeName = "Int";
+        } else if (type == REAL_TYPE) {
+            typeName = "Float";
+        } else if (type == Type.STR_TYPE) {
+            typeName = "Line";
+        } else if (type == Type.BOOL_TYPE) {
+            typeName = "Boolean";
+        }
+
+        // Cria um objeto de scanner novo
+        emit(OpCode.create, "java/util/Scanner");
+        emit(OpCode.dup);
+        emit(OpCode.getstatic, "java/lang/System/in", "Ljava/io/InputStream;");
+        emit(OpCode.invokespecial, "java/util/Scanner/<init>(Ljava/io/InputStream;)V");
+
+        // Emite a chamada do scanner
+        String callString = String.format(
+            "java/util/Scanner/next%s()%s",
+            typeName,
+            getStringType(type));
+        
+        emit(OpCode.invokevirtual, callString);
+
+        emitStore(type, varIdx);
+    }
+
+    private void emitWrite(AST node) {
+        Type type = node.getChild(0).type;
+        int varIdx = node.getChild(0).intData + currentStrings.size() - 1;
+
+        emit(OpCode.getstatic, "java/lang/System/out", "Ljava/io/PrintStream;");
+        visit(node.getChild(0));
+
+        //
+        String callString = String.format(
+            "java/io/PrintStream/print(%s)V",
+            getStringType(node.getChild(0).type));
+        
+        emit(OpCode.invokevirtual, callString);
     }
 
     // private void backpatchJump(int instrAddr, int jumpAddr) {

@@ -3,14 +3,18 @@ package code;
 public enum OpCode {
     // Bytecode Opcodes
     create("new", 1),
-    invokespecial("invokespecial", 1),
-    invokevirtual("invokevirtual", 1),
-    invokestatic("invokestatic", 1),
     dup("dup", 0),
     ldc("ldc", 1),
     //
+    getstatic("getstatic", 2),
+    //
+    invokespecial("invokespecial", 1),
+    invokevirtual("invokevirtual", 1),
+    invokestatic("invokestatic", 1),
+    //
     astore("astore", 1),
     aload("aload", 1),
+    baload("baload", 1),
     //
     istore("istore", 1),
     iload("iload", 1),

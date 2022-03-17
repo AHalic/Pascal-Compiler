@@ -29,9 +29,7 @@ public class FunctionTable extends Table<FunctionWrapper> {
         // Cria as funções built-in
         if (builtIn) {
            this.addBuiltInFunctionOverloaded("write");
-           this.addBuiltInFunctionOverloaded("writeln");
            this.addBuiltInFunctionOverloaded("read");
-           this.addBuiltInFunctionOverloaded("readln");
            this.addBuiltIn("break", Type.NO_TYPE);
         }
     }

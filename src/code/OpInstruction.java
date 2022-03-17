@@ -23,9 +23,9 @@ public final class OpInstruction extends Instruction {
         if (this.op.opCount == 1) {
             f.format(" %s", this.o1);
         } else if (this.op.opCount == 2) {
-            f.format(" %s, %s", this.o1, this.o2);
+            f.format(" %s %s", this.o1, this.o2);
         } else if (this.op.opCount == 3) {
-            f.format(" %s, %s, %s", this.o1, this.o2, this.o3);
+            f.format(" %s %s %s", this.o1, this.o2, this.o3);
         }
         f.close();
         return sb.toString();
