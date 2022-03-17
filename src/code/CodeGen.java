@@ -390,8 +390,16 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         System.out.println("FUNC USE");
 
         // Verifica se não é uma função sem parâmetros
-        if (node.getChildCount() > 0)
-            visit(node.getChild(0));
+        if (node.getChildCount() > 0) {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                visit(node.getChild(i));
+            }
+        }
+
+        //
+        String program = st.getName(0);
+        String header = getFunctionDeclaration(ft.get(node.intData).getFunctions().get(0));
+        emit(OpCode.invokestatic, String.format("%s.%s", program, header));
 
         return null;
     }

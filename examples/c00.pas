@@ -9,8 +9,9 @@ begin
 end;
 
 var
+    num0: integer;
     nomeProgram: string;
 begin
     nomeProgram := 'jagunço';
-    // Teste(1.0, 2);
+    num0 := Teste(1.0, 2);
 end.
