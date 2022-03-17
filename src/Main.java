@@ -61,6 +61,7 @@ public class Main {
                     CodeGen codeGen = new CodeGen(
                         checker.stringTable,
                         checker.ProgramVariableTable,
+                        checker.functionTable,
                         outputFile);
                     codeGen.execute(checker.getAST());
 

@@ -3,10 +3,15 @@ package code;
 import java.util.Formatter;
 
 // Instruction quadruple.
-public class Instruction {
+public abstract class Instruction {
+    public String o1;
+    public String o2;
+    public String o3;
 
     public Instruction() {
     }
+
+    abstract public String getString(int addr);
 
     // Constantes
     

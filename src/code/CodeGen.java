@@ -13,6 +13,10 @@ import ast.ASTBaseVisitor;
 import ast.NodeKind;
 import tables.StringTable;
 import tables.VariableTable;
+import tables.Function;
+import tables.FunctionTable;
+import tables.FunctionWrapper;
+import tables.StringEntry;
 import typing.Type;
 
 public final class CodeGen extends ASTBaseVisitor<Void> {
@@ -20,18 +24,23 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private final Memory memory;
     private final StringTable st;
     private final VariableTable vt;
+    private final FunctionTable ft;
     private final BufferedWriter output;
 
     // Próxima posição na memória de código para emit.
     private static int nextInstr;
     private final Instruction code[]; // Code memory
 
-    public CodeGen(StringTable st, VariableTable vt, BufferedWriter output) {
+    public CodeGen(
+        StringTable st, VariableTable vt,
+        FunctionTable ft, BufferedWriter output
+    ) {
         this.code = new Instruction[INSTR_MEM_SIZE];
         this.stack = new DataStack();
         this.memory = new Memory(vt);
         this.st = st;
         this.vt = vt;
+        this.ft = ft;
         this.output = output;
     }
 
@@ -62,7 +71,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     void dumpProgram() throws IOException {
         for (int addr = 0; addr < nextInstr; addr++) {
-            this.output.write(String.format("%s\n", code[addr].toString()));
+            this.output.write(String.format("%s\n", code[addr].getString(addr)));
         }
         this.output.flush();
     }
@@ -81,16 +90,16 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         if (node.getChild(1).getChildCount() > 0) visit(node.getChild(1));
 
         // Emite declaração da main e o tamanho da stack e locals
-        emit(Structure.methodDeclaration, "main", "[Ljava/lang/String;", "V");
+        emit(Structure.methodDeclaration, "main([Ljava/lang/String;)V");
         emit(Structure.limit, "stack", "65535");
-        emit(Structure.limit, "locals", Integer.toString(this.vt.size() + this.st.size() - 1));
+        emit(Structure.limit, "locals", Integer.toString(this.vt.size() + this.st.size()));
         dumpStrTable();
 
         // Emite os códigos do block node
         if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2));
 
         // Emite o códigos de return e fim do método da main
-        emit(OpCode.returnProgram);
+        emit(OpCode.returnNULL);
         emit(Structure.endMethod); 
 
         return null; 
@@ -124,19 +133,19 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null;
     }
 
-    @Override
+    // @Override
     protected Void visitTimes(AST node) {
-        visit(node.getChild(0));
-        visit(node.getChild(1));
-        if (node.type == INT_TYPE) {
-            int r = stack.popi();
-            int l = stack.popi();
-            stack.pushi(l * r);
-        } else { 
-            float r = stack.popf();
-            float l = stack.popf();
-            stack.pushf(l * r);
-        }
+    //     visit(node.getChild(0));
+    //     visit(node.getChild(1));
+    //     if (node.type == INT_TYPE) {
+    //         int r = stack.popi();
+    //         int l = stack.popi();
+    //         stack.pushi(l * r);
+    //     } else { 
+    //         float r = stack.popf();
+    //         float l = stack.popf();
+    //         stack.pushf(l * r);
+    //     }
         return null;
     }
 
@@ -152,17 +161,24 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitOver(AST node) {
+        System.out.println("OVER");
         visit(node.getChild(0));
         visit(node.getChild(1));
-        if (node.type == INT_TYPE) {
-            int r = stack.popi();
-            int l = stack.popi();
-            stack.pushi(l / r);
-        } else {
-            float r = stack.popf();
-            float l = stack.popf();
-            stack.pushf(l / r);
+        
+
+        switch (node.type) {
+            case INT_TYPE:
+                emit(OpCode.idiv);
+                break;
+            case REAL_TYPE:
+                emit(OpCode.fdiv);
+                break;
+            default:
+                System.out.println("Não implementado!");
+                break;
         }
+        
+
         return null;
     }
 
@@ -248,14 +264,98 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     protected Void visitFuncList(AST node) {
         System.out.println("FUNC LIST");
-        visit(node.getChild(0));
+
+        for (int i = 0; i < node.getChildCount(); i++) {
+            visit(node.getChild(i));
+        }
+
         return null;
+    }
+
+    static String getStringType(Type type) {
+        switch (type) {
+            case INT_TYPE:
+                return "I";
+            case REAL_TYPE:
+                return "F";
+            default:
+                return null;
+        }
+    }
+
+    protected String getFunctionDeclaration(Function function) {
+        // Type type = this.ft.getType(idx);
+        String declaration = function.getName() + "(";
+        VariableTable fvt = function.getVariableTable();
+
+        // Primeira posição é a própria função
+        for (int i = 1; i < fvt.size(); i++) {
+            declaration += getStringType(fvt.getType(i));
+        }
+
+        declaration += ")" + getStringType(function.getType());
+
+        return declaration;
+    }
+
+    protected void emitFunctionReturnType(Function function) {
+        switch (function.getType()) {
+            case INT_TYPE:
+                emit(OpCode.iload, "0");
+                emit(OpCode.returnINT);
+                break;
+            case REAL_TYPE:
+                emit(OpCode.fload, "0");
+                emit(OpCode.returnFLOAT);
+                break;
+            case STR_TYPE:
+                emit(OpCode.aload, "0");
+                emit(OpCode.returnREFERENCE);
+                break;
+            default:
+                emit(OpCode.returnNULL);
+                break;
+        }
+    }
+
+    protected void emitLoadZero(Type type) {
+        emit(OpCode.ldc, "0");
+
+        switch (type) {
+            case INT_TYPE:
+                emit(OpCode.istore, "0");
+                break;
+            case REAL_TYPE:
+                emit(OpCode.fstore, "0");
+                break;
+            case STR_TYPE:
+                emit(OpCode.astore, "0");
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
     protected Void visitFunction(AST node) {
         System.out.println("FUNCTION");
-        visit(node.getChild(0));
+        // Pegamos o envelope da função e pegamos a primeira declaração,
+        // apenas funçõs built-in terão mais de uma definição.
+        Function function = this.ft.get(node.intData).getFunctions().get(0);
+        String declaration = getFunctionDeclaration(function);
+
+        // TODO: Colocar a tabela de strings separadas por função
+        emit(Structure.methodDeclaration, declaration);
+        emit(Structure.limit, "stack", "65535");
+        emit(Structure.limit, "locals", Integer.toString(function.getVariableTable().size()));
+
+        //
+        emitLoadZero(function.getType());
+        emitFunctionReturnType(function);
+
+        emit(Structure.endMethod);
+        emit(Structure.space);
+
         return null;
     }
 
@@ -272,7 +372,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitRealVal(AST node) {
-        stack.pushf(node.floatData);
+        emit(OpCode.ldc, Float.toString(node.floatData));
+        
         return null; 
     }
 
@@ -325,6 +426,108 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             visit(node.getChild(1)); 
             again = (stack.popi() == 0? 1 : 0); 
         }
+        return null;
+    }
+
+    @Override
+    protected Void visitLt(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmpge, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+        
+        return null;
+    }
+
+    @Override
+    protected Void visitLe(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmpgt, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+        
+        return null;
+    }
+
+    @Override
+    protected Void visitGt(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmple, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+        
+        return null;
+    }
+
+    @Override
+    protected Void visitGe(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmplt, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+        
+        return null;
+    }
+
+    @Override
+    protected Void visitEq(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmpne, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+
+        return null;
+    }
+
+    @Override
+    protected Void visitNotEqual(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.if_icmpeq, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "1");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "0");
+
+        return null;
+    }
+
+    @Override
+    protected Void visitIf(AST node) {
+        visit(node.getChild(0));
+        int last_addr = nextInstr;
+        emit(OpCode.ifeq, "");
+        
+        int childs = node.getChildCount();
+
+        if (childs >= 2) { // if com instrucoes
+            visit(node.getChild(1));
+        }
+        
+        this.code[last_addr].o1 = Integer.toString(nextInstr + 1);
+
+        if (childs == 3) { // if - else
+            int last_addr_else = nextInstr;
+            emit(OpCode.gotoProgram, "");
+            visit(node.getChild(2));
+            this.code[last_addr_else].o1 = Integer.toString(nextInstr);
+        }
+
         return null;
     }
 

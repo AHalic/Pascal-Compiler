@@ -12,18 +12,18 @@ public abstract class ASTBaseVisitor<T> {
     protected T visit(AST node) {
         switch(node.kind) {
             case ASSIGN_NODE:       return visitAssign(node);
-            // case EQ_NODE:           return visitEq(node);
+            case EQ_NODE:           return visitEq(node);
             case BLOCK_NODE:        return visitBlock(node);
             case BOOL_VAL_NODE:     return visitBoolVal(node);
-            // case IF_NODE:           return visitIf(node);
+            case IF_NODE:           return visitIf(node);
             case INT_VAL_NODE:      return visitIntVal(node);
             // case NIL_VAL_NODE:      return visitNilVal(node);
             // case ARRAY_NODE:        return visitArray(node);
-            // case LT_NODE:           return visitLt(node);
-            // case GT_NODE:           return visitGt(node);
-            // case LE_NODE:           return visitLe(node);
-            // case GE_NODE:           return visitGe(node);
-            // case NOT_EQUAL_NODE:    return visitNotEqual(node);
+            case LT_NODE:           return visitLt(node);
+            case GT_NODE:           return visitGt(node);
+            case LE_NODE:           return visitLe(node);
+            case GE_NODE:           return visitGe(node);
+            case NOT_EQUAL_NODE:    return visitNotEqual(node);
             case MINUS_NODE:        return visitMinus(node);
             case OVER_NODE:         return visitOver(node);
             case PLUS_NODE:         return visitPlus(node);
@@ -57,13 +57,13 @@ public abstract class ASTBaseVisitor<T> {
 
     protected abstract T visitAssign(AST node);
     
-    // protected abstract T visitEq(AST node);
+    protected abstract T visitEq(AST node);
             
     protected abstract T visitBlock(AST node);
             
     protected abstract T visitBoolVal(AST node);
     
-    // protected abstract T visitIf(AST node);
+    protected abstract T visitIf(AST node);
             
     protected abstract T visitIntVal(AST node);
         
@@ -71,15 +71,15 @@ public abstract class ASTBaseVisitor<T> {
         
     // protected abstract T visitArray(AST node);
         
-    // protected abstract T visitLt(AST node);
+    protected abstract T visitLt(AST node);
             
-    // protected abstract T visitGt(AST node);
+    protected abstract T visitGt(AST node);
             
-    // protected abstract T visitLe(AST node);
+    protected abstract T visitLe(AST node);
             
-    // protected abstract T visitGe(AST node);
+    protected abstract T visitGe(AST node);
             
-    // protected abstract T visitNotEqual(AST node);
+    protected abstract T visitNotEqual(AST node);
     
     protected abstract T visitMinus(AST node);
             
