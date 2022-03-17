@@ -22,10 +22,14 @@ public enum OpCode {
     isub("isub", 0),
     iadd("iadd", 0),
     i2f("i2f", 0),
+    imul("imul", 0),
     //
     fstore("fstore", 1),
     fload("fload", 1),
     fdiv("fdiv", 0),
+    fadd("fadd", 0),
+    fsub("fsub", 0),
+    fmul("fmul", 0),
     //
     returnNULL("return", 0),
     returnFLOAT("freturn", 0),

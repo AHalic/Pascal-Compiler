@@ -129,8 +129,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     @Override
     protected Void visitBlock(AST node) {
 
-        for (int i = 0; i < node.getChildCount() - 1; i++) {
-            visit(node.getChild(i));
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (node.getChild(i) != null) visit(node.getChild(i));
         }
         return null;
     }
@@ -158,28 +158,43 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null;
     }
 
-    // @Override
+    @Override
     protected Void visitTimes(AST node) {
-    //     visit(node.getChild(0));
-    //     visit(node.getChild(1));
-    //     if (node.type == INT_TYPE) {
-    //         int r = stack.popi();
-    //         int l = stack.popi();
-    //         stack.pushi(l * r);
-    //     } else { 
-    //         float r = stack.popf();
-    //         float l = stack.popf();
-    //         stack.pushf(l * r);
-    //     }
+        System.out.println("TIMES");
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        switch (node.type) {
+            case INT_TYPE:
+                emit(OpCode.imul);
+                break;
+            case REAL_TYPE:
+                emit(OpCode.fmul);
+                break;
+            default:
+                System.out.println("Não implementado!");
+                break;
+        }
         return null;
     }
 
     @Override
     protected Void visitMinus(AST node) {
-        System.out.println("MINUS NODE");
+        System.out.println("MINUS");
         visit(node.getChild(0));
         visit(node.getChild(1));
-        emit(OpCode.isub);
+        
+        switch (node.type) {
+            case INT_TYPE:
+                emit(OpCode.isub);
+                break;
+            case REAL_TYPE:
+                emit(OpCode.fsub);
+                break;
+            default:
+                System.out.println("Não implementado!");
+                break;
+        }
 
         return null; 
     }
@@ -235,9 +250,9 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private Void plusReal(AST node) {
         visit(node.getChild(0));
         visit(node.getChild(1));
-        float r = stack.popf();
-        float l = stack.popf();
-        stack.pushf(l + r);
+        emit(OpCode.fadd);
+        System.out.println("PLUS REAL");
+
         return null; 
     }
 
