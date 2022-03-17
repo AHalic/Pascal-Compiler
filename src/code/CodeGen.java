@@ -11,12 +11,11 @@ import java.io.IOException;
 import ast.AST;
 import ast.ASTBaseVisitor;
 import ast.NodeKind;
+import checker.Scope;
 import tables.StringTable;
 import tables.VariableTable;
 import tables.Function;
 import tables.FunctionTable;
-import tables.FunctionWrapper;
-import tables.StringEntry;
 import typing.Type;
 
 public final class CodeGen extends ASTBaseVisitor<Void> {
@@ -26,6 +25,10 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private final VariableTable vt;
     private final FunctionTable ft;
     private final BufferedWriter output;
+    private Scope scope;
+
+    private VariableTable currentVars;
+    private StringTable currentStrings;
 
     // Próxima posição na memória de código para emit.
     private static int nextInstr;
@@ -42,6 +45,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         this.vt = vt;
         this.ft = ft;
         this.output = output;
+        this.currentVars = this.vt;
+        this.currentStrings = this.st;
     }
 
     // Função principal para geração de código.
@@ -58,10 +63,14 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.space);
         emit(Structure.comment, "   ; STR TABLE");
 
+        int start = 0;
+        
         // Começa em 1 porque o 0 é o nome do programa
-        for (int i = 1; i < st.size(); i++) {
-            emit(OpCode.ldc, st.get(i).getName());
-            emit(OpCode.astore, Integer.toString(i - 1));
+        if (scope == Scope.PROGRAM) start += 1;
+
+        for (int i = start; i < currentStrings.size(); i++) {
+            emit(OpCode.ldc, currentStrings.get(i).getName());
+            emit(OpCode.astore, Integer.toString(i - start));
         }
 
         // Emite um espaço para melhor legibilidade
@@ -70,9 +79,20 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     }
 
     void dumpProgram() throws IOException {
+        int addrCounter = 0;
+
         for (int addr = 0; addr < nextInstr; addr++) {
-            this.output.write(String.format("%s\n", code[addr].getString(addr)));
+            this.output.write(String.format("%s\n", code[addr].getString(addrCounter)));
+
+            // Zera a contagem das labels quando entrar em uma nova função
+            if (code[addr] instanceof StructureInstruction) {
+                if (((StructureInstruction)code[addr]).op.name.equals(".method"))
+                    addrCounter = 0;
+            } else {
+                addrCounter++;
+            }
         }
+
         this.output.flush();
     }
 
@@ -118,8 +138,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitVarUse(AST node) {
         System.out.println("VAR USE");
 
-        int varIdx = node.intData + st.size() - 1;
+        int varIdx = node.intData + st.size();
 
+        //
+        if (scope == Scope.PROGRAM) varIdx--;
+
+        //
         if (node.type == INT_TYPE) {
             emit(OpCode.iload, Integer.toString(varIdx));
         } else if (node.type == REAL_TYPE) {
@@ -289,49 +313,33 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         VariableTable fvt = function.getVariableTable();
 
         // Primeira posição é a própria função
-        for (int i = 1; i < fvt.size(); i++) {
+        for (int i = 1; i < fvt.size() - 1; i++) {
             declaration += getStringType(fvt.getType(i));
         }
-
+        
         declaration += ")" + getStringType(function.getType());
 
         return declaration;
     }
 
     protected void emitFunctionReturnType(Function function) {
+        int returnPos = function.getStringTable().size();
+
         switch (function.getType()) {
             case INT_TYPE:
-                emit(OpCode.iload, "0");
+                emit(OpCode.iload, Integer.toString(returnPos));
                 emit(OpCode.returnINT);
                 break;
             case REAL_TYPE:
-                emit(OpCode.fload, "0");
+                emit(OpCode.fload, Integer.toString(returnPos));
                 emit(OpCode.returnFLOAT);
                 break;
             case STR_TYPE:
-                emit(OpCode.aload, "0");
+                emit(OpCode.aload, Integer.toString(returnPos));
                 emit(OpCode.returnREFERENCE);
                 break;
             default:
                 emit(OpCode.returnNULL);
-                break;
-        }
-    }
-
-    protected void emitLoadZero(Type type) {
-        emit(OpCode.ldc, "0");
-
-        switch (type) {
-            case INT_TYPE:
-                emit(OpCode.istore, "0");
-                break;
-            case REAL_TYPE:
-                emit(OpCode.fstore, "0");
-                break;
-            case STR_TYPE:
-                emit(OpCode.astore, "0");
-                break;
-            default:
                 break;
         }
     }
@@ -344,17 +352,35 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         Function function = this.ft.get(node.intData).getFunctions().get(0);
         String declaration = getFunctionDeclaration(function);
 
+        scope = Scope.FUNCTION;
+        VariableTable lastVars = currentVars;
+        StringTable lastStrs = currentStrings;
+        currentVars = function.getVariableTable();
+        currentStrings = function.getStringTable();
+
         // TODO: Colocar a tabela de strings separadas por função
+        int localsNumber = currentVars.size() + function.getStringTable().size();
         emit(Structure.methodDeclaration, declaration);
         emit(Structure.limit, "stack", "65535");
-        emit(Structure.limit, "locals", Integer.toString(function.getVariableTable().size()));
+        emit(Structure.limit, "locals", Integer.toString(localsNumber));
 
         //
-        emitLoadZero(function.getType());
+        dumpStrTable();
+
+        //
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        //
         emitFunctionReturnType(function);
 
         emit(Structure.endMethod);
         emit(Structure.space);
+
+        //
+        currentVars = lastVars;
+        currentStrings = lastStrs;
+        scope = Scope.PROGRAM;
 
         return null;
     }
@@ -394,7 +420,13 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitStrVal(AST node) {
         // Pega a referência, como é uma string devemos subtrair 1,
         // pois o nome do código é registrado como a string 0.
-        emit(OpCode.aload, Integer.toString(node.intData - 1));
+        int varIdx = node.intData;
+
+        // Se o escopo for do programa principal subtrai-se 1,
+        // devido ao nome do programa ser a string 0.
+        if (scope == Scope.PROGRAM) varIdx--;
+
+        emit(OpCode.aload, Integer.toString(varIdx));
         return null;
     }
 
@@ -405,8 +437,13 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(rexpr);
 
         int varIdx = node.getChild(0).intData + st.size() - 1;
-        Type varType = vt.getType(node.getChild(0).intData);
-        
+
+        //
+        // if (scope == Scope.PROGRAM) varIdx--;
+
+        // TODO: Percorrer um for para achar o tipo da função, devido a sobrecarga
+        Type varType = currentVars.getType(node.getChild(0).intData);
+
         if (varType == INT_TYPE) {
             emit(OpCode.istore, Integer.toString(varIdx));
         } else if (varType == REAL_TYPE) {

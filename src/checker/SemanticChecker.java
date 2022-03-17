@@ -28,8 +28,11 @@ import static typing.Conversion.*;
 
 public class SemanticChecker extends PascalParserBaseVisitor<AST> {
     //
-    public final StringTable stringTable = new StringTable();
     public final FunctionTable functionTable = new FunctionTable(true);
+
+    //
+    public final StringTable ProgramStringTable = new StringTable();
+    public StringTable stringTable = ProgramStringTable;
     
     /* Cria a tabela de variáveis e o ponteiro para não ser preciso
        diferenciar se a tabela é da função ou do programa. */
@@ -689,6 +692,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
         Scope lastScope = this.currentScope;
         this.currentScope = Scope.FUNCTION;
         this.variableTable = this.functionTable.getLastVariableTable();
+        this.stringTable = this.functionTable.getLastStringTable();
 
         // cria o nó da função
         AST funcNode = AST.ASTWithFunctionScope(FUNCTION_NODE, idx, functionType);
@@ -721,6 +725,7 @@ public class SemanticChecker extends PascalParserBaseVisitor<AST> {
 
         //
         this.variableTable = this.ProgramVariableTable;
+        this.stringTable = this.ProgramStringTable;
         this.currentScope = lastScope;
 
        return funcNode;

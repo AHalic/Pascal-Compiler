@@ -5,6 +5,7 @@ import typing.Type;
 public class Function extends Entry {
     private int parametersQuantity = 0;
     private VariableTable variableTable = new VariableTable();
+    private StringTable stringTable = new StringTable();
 
     public Function(String name, int line, Type type) {
         super(name, line, type);
@@ -14,6 +15,10 @@ public class Function extends Entry {
         return this.variableTable.add(name, this.line, type);
     }
 
+    public int addString(String name, int line) {
+        return this.stringTable.add(new StringEntry(name, line));
+    }
+
     public int addVariable(String name, int line, Type type, boolean param) {
         if (param) this.parametersQuantity++;
         return this.variableTable.add(name, this.line, type);
@@ -21,6 +26,10 @@ public class Function extends Entry {
 
     public VariableTable getVariableTable() {
         return this.variableTable;
+    }
+
+    public StringTable getStringTable() {
+        return this.stringTable;
     }
 
     public int getParameterQuantity() {

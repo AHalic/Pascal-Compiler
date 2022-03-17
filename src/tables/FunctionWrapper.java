@@ -40,6 +40,10 @@ public class FunctionWrapper extends Entry {
         return this.overloaded.get(this.overloaded.size() - 1).getVariableTable();
     }
 
+    public StringTable getLastStringTable() {
+        return this.overloaded.get(this.overloaded.size() - 1).getStringTable();
+    }
+
     public int addOverloaded(Function function) {
         int idx = this.overloaded.size();
         this.overloaded.add(function);
