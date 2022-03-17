@@ -14,4 +14,5 @@ begin
 
     nome := 'Marco';
     d := 'Hello, ' + nome + '!';
+    write(d);
 end.
