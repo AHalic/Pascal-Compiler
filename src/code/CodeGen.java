@@ -670,9 +670,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             visit(node.getChild(1));
         }
         
-        this.code[last_addr].o1 = Integer.toString(nextInstr + 1);
+        if (childs == 2)
+            this.code[last_addr].o1 = Integer.toString(nextInstr);
 
         if (childs == 3) { // if - else
+            this.code[last_addr].o1 = Integer.toString(nextInstr + 1);
             int last_addr_else = nextInstr;
             emit(OpCode.gotoProgram, "");
             visit(node.getChild(2));
