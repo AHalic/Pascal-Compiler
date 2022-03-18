@@ -65,5 +65,23 @@ public enum OpCode {
     public String toString() {
         return this.name;
     }
+
+    public Boolean isJump() {
+        switch (this.name) {
+            case "ifeq":
+            case "ifgt":
+            case "ifle":
+            case "ifne":
+            case "if_icmpeq":
+            case "if_icmple":
+            case "if_icmplt":
+            case "if_icmpge":
+            case "if_icmpgt":
+            case "if_icmpne":
+            case "goto":
+                return true;
+        }
+        return false;
+    }
     
 }
