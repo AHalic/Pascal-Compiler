@@ -531,12 +531,21 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitRepeat(AST node) {
-        int again = 1;
-        while (again == 1) {
-            visit(node.getChild(0)); 
-            visit(node.getChild(1)); 
-            again = (stack.popi() == 0? 1 : 0); 
-        }
+        int first_addr = nextInstr;
+        visit(node.getChild(0));
+        int eq_addr = nextInstr;
+        emit(OpCode.ifeq, "");
+        
+        // visita as instruções
+        visit(node.getChild(1));
+        
+        emit(OpCode.gotoProgram, "");
+        
+        // modifica o label do operador goto
+        this.code[nextInstr-1].o1 = Integer.toString(first_addr);
+        // modifica o label do operador ifeq
+        this.code[eq_addr].o1 = Integer.toString(nextInstr);
+        
         return null;
     }
 
@@ -670,6 +679,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
         return null;
     }
+
 
     @Override
     protected Void visitINT2REAL(AST node) {
