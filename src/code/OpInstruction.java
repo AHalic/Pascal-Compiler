@@ -16,12 +16,19 @@ public final class OpInstruction extends Instruction {
         this.o3 = o3;
     }
     
-    public String getString(int addr) {
+    public String getString(int addr, int diff) {
         StringBuilder sb = new StringBuilder();
         Formatter f = new Formatter(sb);
         f.format("    %d: %s", addr, this.op.toString());
+
         if (this.op.opCount == 1) {
-            f.format(" %s", this.o1);
+            if (this.op.isJump()) {
+                System.out.println("dentro: param == " + Integer.parseInt(this.o1) + " o addr == " + addr);
+                f.format(" %s", Integer.toString(Integer.parseInt(this.o1) - diff));    
+            }
+            else {
+                f.format(" %s", this.o1);
+            }
         } else if (this.op.opCount == 2) {
             f.format(" %s %s", this.o1, this.o2);
         } else if (this.op.opCount == 3) {

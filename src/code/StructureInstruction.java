@@ -13,7 +13,7 @@ public final class StructureInstruction extends Instruction {
         this.o3 = o3;
     }
     
-    public String getString(int addr) {
+    public String getString(int addr, int diff) {
         StringBuilder sb = new StringBuilder();
         Formatter f = new Formatter(sb);
         

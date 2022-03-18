@@ -11,7 +11,7 @@ public abstract class Instruction {
     public Instruction() {
     }
 
-    abstract public String getString(int addr);
+    abstract public String getString(int addr, int diff);
 
     // Constantes
     
