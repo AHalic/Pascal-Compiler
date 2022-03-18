@@ -23,7 +23,6 @@ public final class OpInstruction extends Instruction {
 
         if (this.op.opCount == 1) {
             if (this.op.isJump()) {
-                System.out.println("dentro: param == " + Integer.parseInt(this.o1) + " o addr == " + addr);
                 f.format(" %s", Integer.toString(Integer.parseInt(this.o1) - diff));    
             }
             else {
