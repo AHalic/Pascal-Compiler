@@ -204,7 +204,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         System.out.println("OVER");
         visit(node.getChild(0));
         visit(node.getChild(1));
-        
 
         switch (node.type) {
             case INT_TYPE:
@@ -615,6 +614,35 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(OpCode.ldc, "1");
         emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
         emit(OpCode.ldc, "0");
+
+        return null;
+    }
+
+    @Override
+    protected Void visitAnd(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.iand);
+
+        return null;
+    }
+
+    @Override
+    protected Void visitOr(AST node) {
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+
+        emit(OpCode.ior);
+
+        return null;
+    }
+
+    @Override
+    protected Void visitNot(AST node) {
+        visit(node.getChild(0));
+
+        emit(OpCode.ineg);
 
         return null;
     }

@@ -23,6 +23,9 @@ public enum OpCode {
     iadd("iadd", 0),
     i2f("i2f", 0),
     imul("imul", 0),
+    iand("iand", 0),
+    ior("ior", 0),
+    ineg("ineg", 0),
     //
     fstore("fstore", 1),
     fload("fload", 1),

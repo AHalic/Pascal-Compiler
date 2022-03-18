@@ -34,9 +34,9 @@ public abstract class ASTBaseVisitor<T> {
             case REPEAT_NODE:       return visitRepeat(node);
             case STR_VAL_NODE:      return visitStrVal(node);
             case TIMES_NODE:        return visitTimes(node);
-            // case AND_NODE:          return visitAnd(node);
-            // case OR_NODE:           return visitOr(node);
-            // case NOT_NODE:          return visitNot(node);
+            case AND_NODE:          return visitAnd(node);
+            case OR_NODE:           return visitOr(node);
+            case NOT_NODE:          return visitNot(node);
             case VAR_DECL_NODE:     return visitVarDecl(node);
             case VAR_LIST_NODE:     return visitVarList(node);
             case VAR_USE_NODE:      return visitVarUse(node);
@@ -101,11 +101,11 @@ public abstract class ASTBaseVisitor<T> {
         
     protected abstract T visitTimes(AST node);
         
-    // protected abstract T visitAnd(AST node);
+    protected abstract T visitAnd(AST node);
         
-    // protected abstract T visitOr(AST node);
+    protected abstract T visitOr(AST node);
             
-    // protected abstract T visitNot(AST node);
+    protected abstract T visitNot(AST node);
         
     protected abstract T visitVarDecl(AST node);
     
