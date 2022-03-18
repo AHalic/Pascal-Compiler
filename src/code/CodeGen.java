@@ -84,7 +84,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         int diff;
 
         for (int addr = 0; addr < nextInstr; addr++) {
-            System.out.println("adrr e count: " + addr + "  " + addrCounter);
             diff = addr - addrCounter;
             this.output.write(String.format("%s\n", code[addr].getString(addrCounter, diff)));
 
