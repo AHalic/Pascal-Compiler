@@ -4,7 +4,7 @@ This is an implementation of a Pascal compiler using Java made by:
 
 Gabriel Soares, Marco Oliari and Sophie Dilhon
 
-In this stage of the project, the semantic analyser was implemented, along with an AST and some auxiliar tables to store, for example, variables and functions. 
+In this stage of the project, the compiler generates JVM (bytecode) based on the AST implemented in a prior stage.
 
 ## How to run
 To compile and run the code, you can run in your command line:
