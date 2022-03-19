@@ -389,21 +389,17 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.limit, "stack", "65535");
         emit(Structure.limit, "locals", Integer.toString(localsNumber));
 
-        //
-        System.out.println(function.getParameterQuantity() + 1);
+        // Faz o dump da tabela de strings
         dumpStrTable();
-
-        //
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        //
+        // Emite o retorno da função e fecha a estrutura
         emitFunctionReturnType(function);
-
         emit(Structure.endMethod);
         emit(Structure.space);
 
-        //
+        // Volta o escopo para a função principal
         currentVars = lastVars;
         currentStrings = lastStrs;
         scope = Scope.PROGRAM;
@@ -412,6 +408,10 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     }
 
     protected Boolean emitBuiltInFunction(AST node) {
+        /* Se o id do functionWrapper for maior que a quantidade de
+           funções built-in, retorna false */
+        if (node.intData > 3) return false;
+
         Function builtin = null;
 
         // Busca a função built-in com os parâmetros correto
@@ -466,7 +466,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         /* Caso seja uma função built-in irá retornar false, caso contrário
            o código da função é emitido */
         if (!emitBuiltInFunction(node)) {
-            System.out.println("ASD");
             // Verifica se não é uma função sem parâmetros
             if (node.getChildCount() > 0) {
                 // Caso tenha parâmetros temos que empilha-los na pilha
