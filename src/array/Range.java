@@ -13,6 +13,10 @@ public class Range {
         return upperLimit;
     }
 
+    public int getLowerLimit() {
+        return lowerLimit;
+    }
+
     @Override
     public String toString() {
         return lowerLimit + ".." + upperLimit;

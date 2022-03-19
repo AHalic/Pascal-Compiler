@@ -328,13 +328,14 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             if (node.getChild(i).type == Type.ARRAY_TYPE) {
                 Array a = (Array)vt.get(node.getChild(i).intData);
                 List<Range> ranges = a.getRanges();
-                int upperLimit = ranges.get(0).getUpperLimit();
                 
                 // COLOCAR TODAS AS DIMENSÕES
-                // for (int j = 0; j < ranges.size(); j++) {}
+                for (int j = 0; j < ranges.size(); j++) {
+                    int lowerLimit = ranges.get(j).getLowerLimit();
+                    emit(OpCode.ldc, Integer.toString(ranges.get(j).getUpperLimit() - lowerLimit));
+                }
 
-                emit(OpCode.ldc, Integer.toString(upperLimit));
-                emit(OpCode.multianewarray, typeToString(a.componentType, ranges.size()), "1");
+                emit(OpCode.multianewarray, typeToString(a.componentType, ranges.size()), Integer.toString(ranges.size()));
                 emit(OpCode.astore, Integer.toString(node.getChild(i).intData));
             }
         }
@@ -566,16 +567,22 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         
         if (node.getChild(0).kind == NodeKind.SUBSCRIPT_NODE) {
             int varIdxArray = node.getChild(0).getChild(0).intData;
+            Array array = (Array)currentVars.get(varIdxArray);
+            List<Range> ranges = array.getRanges();
             emit(OpCode.aload, Integer.toString(varIdxArray));
             
             int i = 1;
             // Index
             for (; i < node.getChild(0).getChildCount() - 1; i++) {
                 visit(node.getChild(0).getChild(i));
+                emit(OpCode.ldc, Integer.toString(ranges.get(i - 1).getLowerLimit()));
+                emit(OpCode.isub);
                 emit(OpCode.aaload);
             }
             
             visit(node.getChild(0).getChild(i));
+            emit(OpCode.ldc, Integer.toString(ranges.get(i - 1).getLowerLimit()));
+            emit(OpCode.isub);
             
             // Store
             visit(rexpr);
@@ -743,16 +750,20 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitSubscript(AST node) {
         int varIdxArray = node.getChild(0).intData;
         emit(OpCode.aload, Integer.toString(varIdxArray));
-        
-        int i;
+        List<Range> ranges = ((Array)currentVars.get(varIdxArray)).getRanges();
+
+        int i = 1;
         // Index
         for (i = 1; i < node.getChildCount() - 1; i++) {
             visit(node.getChild(i));
+            emit(OpCode.ldc, Integer.toString(ranges.get(i - 1).getLowerLimit()));
+            emit(OpCode.isub);
             emit(OpCode.aaload);
         }
         
         visit(node.getChild(i));
-        
+        emit(OpCode.ldc, Integer.toString(ranges.get(i - 1).getLowerLimit()));
+        emit(OpCode.isub);
         emit(OpCode.iaload);
 
         return null;
