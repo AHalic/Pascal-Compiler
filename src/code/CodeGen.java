@@ -165,13 +165,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             emit(OpCode.fload, Integer.toString(varIdx));
         } else if (node.type == Type.STR_TYPE) {
             emit(OpCode.aload, Integer.toString(varIdx));
-        } else {
-            // USAR ARRAY
-
-            for (int i = 0; i < node.getChildCount(); i++) {
-                visit(node.getChild(i));
-            }
-
         }
 
         return null;
@@ -748,9 +741,20 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     // TODO
     @Override
     protected Void visitSubscript(AST node) {
-        System.out.println("Entrou 1");
-        visit(node.getChild(0));
-        visit(node.getChild(1));
+        int varIdxArray = node.getChild(0).getChild(0).intData;
+        emit(OpCode.aload, Integer.toString(varIdxArray));
+        
+        int i = 1;
+        // Index
+        for (; i < node.getChildCount() - 1; i++) {
+            visit(node.getChild(i));
+            emit(OpCode.aaload);
+        }
+        
+        visit(node.getChild(i));
+        
+        emit(OpCode.iaload);
+
         return null;
     }
 

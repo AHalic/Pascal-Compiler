@@ -6,6 +6,6 @@ var
 
 begin
     numeros[1] := 2;
-
     // a := numeros[1];
+    write(numeros[1]);
 end.
