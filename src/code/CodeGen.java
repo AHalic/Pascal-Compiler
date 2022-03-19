@@ -741,12 +741,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     // TODO
     @Override
     protected Void visitSubscript(AST node) {
-        int varIdxArray = node.getChild(0).getChild(0).intData;
+        int varIdxArray = node.getChild(0).intData;
         emit(OpCode.aload, Integer.toString(varIdxArray));
         
-        int i = 1;
+        int i;
         // Index
-        for (; i < node.getChildCount() - 1; i++) {
+        for (i = 1; i < node.getChildCount() - 1; i++) {
             visit(node.getChild(i));
             emit(OpCode.aaload);
         }

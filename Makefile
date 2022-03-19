@@ -6,6 +6,7 @@ MAIN_PATH=src
 GEN_PATH=src/parser
 BIN_PATH=bin
 ANTLR_PATH=./lib/antlr-4.9.3-complete.jar
+JASMIN_PATH=./lib/jasmin-2.4.jar
 
 # Antlr settings
 ANTLR4=$(JAVA) -jar $(ANTLR_PATH)
@@ -32,6 +33,10 @@ runall:
 
 run:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT)
+
+run_java:
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT)
+	$(JAVA) -jar $(JASMIN_PATH) $(OUTPUT)
 
 run_dot:
 	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT) 2> graph.dot
