@@ -9,6 +9,10 @@ public class Range {
         this.upperLimit = upperLimit;
     }
 
+    public int getUpperLimit() {
+        return upperLimit;
+    }
+
     @Override
     public String toString() {
         return lowerLimit + ".." + upperLimit;

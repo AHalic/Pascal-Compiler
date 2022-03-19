@@ -12,11 +12,14 @@ public enum OpCode {
     invokevirtual("invokevirtual", 1),
     invokestatic("invokestatic", 1),
     //
+    aastore("aastore", 0),
     astore("astore", 1),
     aload("aload", 1),
+    aaload("aaload", 0),
     baload("baload", 1),
     //
     istore("istore", 1),
+    iastore("iastore", 0),
     iload("iload", 1),
     idiv("idiv", 0),
     isub("isub", 0),
@@ -28,6 +31,7 @@ public enum OpCode {
     ineg("ineg", 0),
     //
     fstore("fstore", 1),
+    fastore("fastore", 0),
     fload("fload", 1),
     fdiv("fdiv", 0),
     fadd("fadd", 0),
@@ -50,8 +54,10 @@ public enum OpCode {
     if_icmpge("if_icmpge", 1),
     if_icmpgt("if_icmpgt", 1),
     if_icmpne("if_icmpne", 1),
-    gotoProgram("goto", 1);
-
+    gotoProgram("goto", 1),
+    //
+    newarray("newarray", 1),
+    multianewarray("multianewarray", 2);
     
     
     public final String name;

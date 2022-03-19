@@ -18,7 +18,7 @@ public abstract class ASTBaseVisitor<T> {
             case IF_NODE:           return visitIf(node);
             case INT_VAL_NODE:      return visitIntVal(node);
             // case NIL_VAL_NODE:      return visitNilVal(node);
-            // case ARRAY_NODE:        return visitArray(node);
+            case ARRAY_NODE:        return visitArray(node);
             case LT_NODE:           return visitLt(node);
             case GT_NODE:           return visitGt(node);
             case LE_NODE:           return visitLe(node);
@@ -40,7 +40,7 @@ public abstract class ASTBaseVisitor<T> {
             case VAR_DECL_NODE:     return visitVarDecl(node);
             case VAR_LIST_NODE:     return visitVarList(node);
             case VAR_USE_NODE:      return visitVarUse(node);
-            // case SUBSCRIPT_NODE:    return visitSubscript(node);
+            case SUBSCRIPT_NODE:    return visitSubscript(node);
             case FUNC_USE_NODE:     return visitFuncUse(node);
 
             // Só esse? Olhar em typing/Type
@@ -69,7 +69,7 @@ public abstract class ASTBaseVisitor<T> {
         
     // protected abstract T visitNilVal(AST node);
         
-    // protected abstract T visitArray(AST node);
+    protected abstract T visitArray(AST node);
         
     protected abstract T visitLt(AST node);
             
@@ -113,7 +113,7 @@ public abstract class ASTBaseVisitor<T> {
     
     protected abstract T visitVarUse(AST node);
         
-    // protected abstract T visitSubscript(AST node);
+    protected abstract T visitSubscript(AST node);
     
     protected abstract T visitFuncUse(AST node);
     

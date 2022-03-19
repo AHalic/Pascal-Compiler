@@ -29,6 +29,10 @@ public class Array extends Entry {
         this.ranges.add(range);
     }
 
+    public List<Range> getRanges() {
+        return this.ranges;
+    }
+
     public int getDimensionSize() {
         return this.ranges.size();
     }

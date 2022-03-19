@@ -8,10 +8,17 @@ import static typing.Type.REAL_TYPE;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import org.antlr.runtime.tree.TreeWizard.Visitor;
+
+import java.util.List;
+
 import ast.AST;
 import ast.ASTBaseVisitor;
 import ast.NodeKind;
+import array.Array;
+import array.Range;
 import checker.Scope;
+import code.OpCode;
 import tables.StringTable;
 import tables.VariableTable;
 import tables.Function;
@@ -108,9 +115,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.objectInheritance);
         emit(Structure.space);
 
-        // VarList node
-        if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
-
         // FunctionList node
         if (node.getChild(1).getChildCount() > 0) visit(node.getChild(1));
 
@@ -119,6 +123,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.limit, "stack", "65535");
         emit(Structure.limit, "locals", Integer.toString(this.vt.size() + this.st.size()));
         dumpStrTable();
+
+        // VarList node
+        if (node.getChild(0).getChildCount() > 0) visit(node.getChild(0));
+
+        emit(Structure.space);
 
         // Emite os códigos do block node
         if (node.getChild(2).getChildCount() > 0) visit(node.getChild(2));
@@ -157,7 +166,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         } else if (node.type == Type.STR_TYPE) {
             emit(OpCode.aload, Integer.toString(varIdx));
         } else {
-            System.out.println("FALTA IMPLEMENTAR AQUI!!!!");
+            // USAR ARRAY
+
+            for (int i = 0; i < node.getChildCount(); i++) {
+                visit(node.getChild(i));
+            }
+
         }
 
         return null;
@@ -292,9 +306,22 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null;
     }
 
+    private String typeToString(Type t, int childCount) {
+        String s = "[";
+
+        for (int i = 1; i < childCount; i++) {
+            s += "[";
+        }
+
+        s += getStringType(t);
+
+        return s;
+    }
+
     @Override
     protected Void visitVarDecl(AST node) {
         System.out.println("VAR_DECL");
+
         return null; 
     }
 
@@ -302,6 +329,22 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitVarList(AST node) {
         System.out.println("VAR_LIST");
         visit(node.getChild(0));
+
+        // TODO ARRAY DECLARAR
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (node.getChild(i).type == Type.ARRAY_TYPE) {
+                Array a = (Array)vt.get(node.getChild(i).intData);
+                List<Range> ranges = a.getRanges();
+                int upperLimit = ranges.get(0).getUpperLimit();
+                
+                // COLOCAR TODAS AS DIMENSÕES
+                // for (int j = 0; j < ranges.size(); j++) {}
+
+                emit(OpCode.ldc, Integer.toString(upperLimit));
+                emit(OpCode.multianewarray, typeToString(a.componentType, ranges.size()), "1");
+                emit(OpCode.astore, Integer.toString(node.getChild(i).intData));
+            }
+        }
         return null; 
     }
 
@@ -441,15 +484,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             // Emite a função
             switch (builtin.getName()) {
                 case "read":
-                    System.out.println("BUILT-IN READ");
                     emitRead(node);
                     break;
                 case "writeln":
-                    System.out.println("BUILT-IN WRITELN");
                     emitWriteln(node);
                     break;
                 case "write":
-                    System.out.println("BUILT-IN WRITE");
                     emitWrite(node);
                     break;
             }
@@ -522,28 +562,57 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitAssign(AST node) {
         System.out.println("ASSIGN");
         AST rexpr = node.getChild(1);
-        visit(rexpr);
-
+        
         int varIdx = node.getChild(0).intData;
-
+        
         if (scope == Scope.FUNCTION && node.getChild(0).intData == 0) {
             varIdx = paramsQtd;
         }
-
+        
         Type varType = currentVars.getType(node.getChild(0).intData);
-
-        emitStore(varType, varIdx);
+        
+        if (node.getChild(0).kind == NodeKind.SUBSCRIPT_NODE) {
+            int varIdxArray = node.getChild(0).getChild(0).intData;
+            emit(OpCode.aload, Integer.toString(varIdxArray));
+            
+            int i = 1;
+            // Index
+            for (; i < node.getChild(0).getChildCount() - 1; i++) {
+                visit(node.getChild(0).getChild(i));
+                emit(OpCode.aaload);
+            }
+            
+            visit(node.getChild(0).getChild(i));
+            
+            // Store
+            visit(rexpr);
+            emitStore(varType, varIdxArray, true);
+        } else {
+            visit(rexpr);
+            emitStore(varType, varIdx, false);
+        }
+        
 
         return null;
     }
 
-    protected Void emitStore(Type varType, int varIdx) {
-        if (varType == INT_TYPE || varType == Type.BOOL_TYPE) {
-            emit(OpCode.istore, Integer.toString(varIdx));
-        } else if (varType == REAL_TYPE) {
-            emit(OpCode.fstore, Integer.toString(varIdx));
-        } else if (varType == Type.STR_TYPE) {
-            emit(OpCode.astore, Integer.toString(varIdx));
+    protected Void emitStore(Type varType, int varIdx, boolean isArray) {
+        if (!isArray) {
+            if (varType == INT_TYPE || varType == Type.BOOL_TYPE) {
+                emit(OpCode.istore, Integer.toString(varIdx));
+            } else if (varType == REAL_TYPE) {
+                emit(OpCode.fstore, Integer.toString(varIdx));
+            } else if (varType == Type.STR_TYPE) {
+                emit(OpCode.astore, Integer.toString(varIdx));
+            }
+        } else {
+            if (varType == INT_TYPE || varType == Type.BOOL_TYPE) {
+                emit(OpCode.iastore);
+            } else if (varType == REAL_TYPE) {
+                emit(OpCode.fastore);
+            } else if (varType == Type.STR_TYPE) {
+                emit(OpCode.aastore);
+            }
         }
 
         return null;
@@ -676,6 +745,21 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         return null;
     }
 
+    // TODO
+    @Override
+    protected Void visitSubscript(AST node) {
+        System.out.println("Entrou 1");
+        visit(node.getChild(0));
+        visit(node.getChild(1));
+        return null;
+    }
+
+    @Override
+    protected Void visitArray(AST node) {
+        System.out.println("Entrou 2");
+        return null;
+    }
+
     @Override
     protected Void visitIf(AST node) {
         visit(node.getChild(0));
@@ -780,7 +864,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         
         emit(OpCode.invokevirtual, callString);
 
-        emitStore(type, varIdx);
+        emitStore(type, varIdx, false);
     }
 
     private void emitWrite(AST node) {
