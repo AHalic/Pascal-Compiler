@@ -26,6 +26,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private final FunctionTable ft;
     private final BufferedWriter output;
     private Scope scope;
+    private int paramsQtd;
 
     private VariableTable currentVars;
     private StringTable currentStrings;
@@ -65,13 +66,14 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.comment, "   ; STR TABLE");
 
         int start = 0;
+        int offset = currentVars.size();
         
         // Começa em 1 porque o 0 é o nome do programa
         if (scope == Scope.PROGRAM) start += 1;
 
         for (int i = start; i < currentStrings.size(); i++) {
             emit(OpCode.ldc, currentStrings.get(i).getName());
-            emit(OpCode.astore, Integer.toString(i - start));
+            emit(OpCode.astore, Integer.toString(i + offset - start));
         }
 
         // Emite um espaço para melhor legibilidade
@@ -141,10 +143,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitVarUse(AST node) {
         System.out.println("VAR USE");
 
-        int varIdx = node.intData + st.size();
+        int varIdx = node.intData;
 
-        //
-        if (scope == Scope.PROGRAM) varIdx--;
+        if (scope == Scope.FUNCTION) {
+            varIdx -= 1;
+        }
 
         //
         if (node.type == INT_TYPE || node.type == Type.BOOL_TYPE) {
@@ -344,7 +347,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     }
 
     protected void emitFunctionReturnType(Function function) {
-        int returnPos = function.getStringTable().size();
+        int returnPos = function.getParameterQuantity();
 
         switch (function.getType()) {
             case INT_TYPE:
@@ -374,18 +377,20 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         String declaration = getFunctionDeclaration(function);
 
         scope = Scope.FUNCTION;
+        paramsQtd = function.getParameterQuantity();
         VariableTable lastVars = currentVars;
         StringTable lastStrs = currentStrings;
         currentVars = function.getVariableTable();
         currentStrings = function.getStringTable();
 
         // TODO: Colocar a tabela de strings separadas por função
-        int localsNumber = currentVars.size() + function.getStringTable().size() + 1;
+        int localsNumber = currentVars.size() + function.getStringTable().size();
         emit(Structure.methodDeclaration, declaration);
         emit(Structure.limit, "stack", "65535");
         emit(Structure.limit, "locals", Integer.toString(localsNumber));
 
         //
+        System.out.println(function.getParameterQuantity() + 1);
         dumpStrTable();
 
         //
@@ -415,7 +420,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             Boolean finded = true;
 
             for (int i = 1; i < vt.size(); i++) {
-                if (vt.getType(i) != node.getChild(i - 1).type) {
+                try {
+                    if (vt.getType(i) != node.getChild(i - 1).type) {
+                        finded = false;
+                        break;
+                    }
+                } catch (IndexOutOfBoundsException exception) {
                     finded = false;
                     break;
                 }
@@ -427,19 +437,26 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             }
         }
 
-        // Emite a função
-        switch (builtin.getName()) {
-            case "read":
-                System.out.println("BUILT-IN READ");
-                emitRead(node);
-                break;
-            case "write":
-                System.out.println("BUILT-IN WRITE");
-                emitWrite(node);
-                break;
+        if (builtin != null) {
+            // Emite a função
+            switch (builtin.getName()) {
+                case "read":
+                    System.out.println("BUILT-IN READ");
+                    emitRead(node);
+                    break;
+                case "writeln":
+                    System.out.println("BUILT-IN WRITELN");
+                    emitWriteln(node);
+                    break;
+                case "write":
+                    System.out.println("BUILT-IN WRITE");
+                    emitWrite(node);
+                    break;
+            }
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     @Override
@@ -449,6 +466,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         /* Caso seja uma função built-in irá retornar false, caso contrário
            o código da função é emitido */
         if (!emitBuiltInFunction(node)) {
+            System.out.println("ASD");
             // Verifica se não é uma função sem parâmetros
             if (node.getChildCount() > 0) {
                 // Caso tenha parâmetros temos que empilha-los na pilha
@@ -462,7 +480,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             String header = getFunctionDeclaration(ft.get(node.intData).getFunctions().get(0));
             emit(OpCode.invokestatic, String.format("%s.%s", program, header));
         }
-
 
         return null;
     }
@@ -492,7 +509,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitStrVal(AST node) {
         // Pega a referência, como é uma string devemos subtrair 1,
         // pois o nome do código é registrado como a string 0.
-        int varIdx = node.intData;
+        int varIdx = node.intData + currentVars.size();
 
         // Se o escopo for do programa principal subtrai-se 1,
         // devido ao nome do programa ser a string 0.
@@ -508,9 +525,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         AST rexpr = node.getChild(1);
         visit(rexpr);
 
-        int varIdx = node.getChild(0).intData + currentStrings.size();
+        int varIdx = node.getChild(0).intData;
 
-        if (scope == Scope.PROGRAM) varIdx--;
+        if (scope == Scope.FUNCTION && node.getChild(0).intData == 0) {
+            varIdx = paramsQtd;
+        }
 
         Type varType = currentVars.getType(node.getChild(0).intData);
 
@@ -766,18 +785,37 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     }
 
     private void emitWrite(AST node) {
-        Type type = node.getChild(0).type;
-        int varIdx = node.getChild(0).intData + currentStrings.size() - 1;
-
         emit(OpCode.getstatic, "java/lang/System/out", "Ljava/io/PrintStream;");
-        visit(node.getChild(0));
-
-        //
-        String callString = String.format(
-            "java/io/PrintStream/print(%s)V",
-            getStringType(node.getChild(0).type));
         
-        emit(OpCode.invokevirtual, callString);
+        if (node.getChildCount() == 1) {
+            visit(node.getChild(0));
+
+            //
+            String callString = String.format(
+                "java/io/PrintStream/print(%s)V",
+                getStringType(node.getChild(0).type));
+            
+            emit(OpCode.invokevirtual, callString);
+        }
+    }
+
+    private void emitWriteln(AST node) {
+        emit(OpCode.getstatic, "java/lang/System/out", "Ljava/io/PrintStream;");
+        if (node.getChildCount() == 1) {
+            visit(node.getChild(0));
+
+            //
+            String callString = String.format(
+                "java/io/PrintStream/print(%s)V",
+                getStringType(node.getChild(0).type));
+
+            emit(OpCode.invokevirtual, callString);
+        }
+
+        // Emite a quebra de linha
+        emit(OpCode.getstatic, "java/lang/System/out", "Ljava/io/PrintStream;");
+        emit(OpCode.ldc, "\"\\n\"");
+        emit(OpCode.invokevirtual, "java/io/PrintStream/print(Ljava/lang/String;)V");
     }
 
     // private void backpatchJump(int instrAddr, int jumpAddr) {
