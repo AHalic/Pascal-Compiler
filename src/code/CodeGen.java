@@ -154,7 +154,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
         int varIdx = node.intData;
 
-        if (scope == Scope.FUNCTION) {
+        if (scope == Scope.FUNCTION && paramsQtd > 0) {
             varIdx -= 1;
         }
 
@@ -379,8 +379,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         VariableTable fvt = function.getVariableTable();
 
         // Primeira posição é a própria função
-        for (int i = 1; i < fvt.size(); i++) {
-            declaration += getStringType(fvt.getType(i));
+        for (int i = 0; i < function.getParameterQuantity(); i++) {
+            declaration += getStringType(fvt.getType(i+1));
         }
         
         declaration += ")" + getStringType(function.getType());

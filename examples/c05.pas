@@ -8,7 +8,7 @@ var
 (* **************************    main      ********************************** *)
  
 begin
-//   writeln('Please enter an integer between 0 and 100');
+  writeln('Please enter an integer between 0 and 100');
   read(number);
 
   while (number < 0) do begin

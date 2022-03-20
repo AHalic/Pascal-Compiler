@@ -10,12 +10,12 @@ begin
     temp := 1;
     if (temp >= 1) then
         writeln('I did something');
-    temp := temp + 1
+    temp := temp + 1;
 end;
 
 var
     a: real;
 begin
-    // Something;
+    Something;
     writeln('I will do something');
 end.
