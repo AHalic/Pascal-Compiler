@@ -920,7 +920,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     private void emitRead(AST node) {
         Type type = node.getChild(0).type;
         String typeName = "";
-        int varIdx = node.getChild(0).intData + currentStrings.size() - 1;
+        int varIdx = node.getChild(0).intData;
 
         // Verifica o pos-append no nome do método do scanner
         if (type == INT_TYPE) {
