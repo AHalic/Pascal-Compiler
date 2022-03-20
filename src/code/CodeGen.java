@@ -484,7 +484,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
                     emitWriteln(node);
                     break;
                 case "write":
-                    emitWrite(node);
+                    emitwriteln(node);
                     break;
             }
             return true;
@@ -740,7 +740,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitNot(AST node) {
         visit(node.getChild(0));
 
-        emit(OpCode.ineg);
+        // emit(OpCode.ineg);
+        emit(OpCode.ifeq, Integer.toString(nextInstr + 3));
+        emit(OpCode.ldc, "0");
+        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+        emit(OpCode.ldc, "1");
 
         return null;
     }
@@ -882,7 +886,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emitStore(type, varIdx, false);
     }
 
-    private void emitWrite(AST node) {
+    private void emitwriteln(AST node) {
         emit(OpCode.getstatic, "java/lang/System/out", "Ljava/io/PrintStream;");
         
         if (node.getChildCount() == 1) {
