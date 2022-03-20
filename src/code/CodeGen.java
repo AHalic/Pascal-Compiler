@@ -643,10 +643,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        emit(OpCode.if_icmpge, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmpge, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpg);
+            emit(OpCode.ifge, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
         
         return null;
     }
@@ -656,11 +664,19 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        emit(OpCode.if_icmpgt, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
-        
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmpgt, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpg);
+            emit(OpCode.ifgt, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
+
         return null;
     }
 
@@ -668,11 +684,19 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitGt(AST node) {
         visit(node.getChild(0));
         visit(node.getChild(1));
-
-        emit(OpCode.if_icmple, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
+        
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmple, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpl);
+            emit(OpCode.ifle, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
         
         return null;
     }
@@ -682,10 +706,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        emit(OpCode.if_icmplt, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmplt, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpl);
+            emit(OpCode.iflt, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
         
         return null;
     }
@@ -695,11 +727,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        emit(OpCode.if_icmpne, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
-
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmpne, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpl);
+            emit(OpCode.ifne, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
         return null;
     }
 
@@ -708,10 +747,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
 
-        emit(OpCode.if_icmpeq, Integer.toString(nextInstr + 3));
-        emit(OpCode.ldc, "1");
-        emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
-        emit(OpCode.ldc, "0");
+        if (node.getChild(0).type == INT_TYPE || node.getChild(0).type == Type.BOOL_TYPE) {
+            emit(OpCode.if_icmpeq, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        } else {
+            emit(OpCode.fcmpl);
+            emit(OpCode.ifeq, Integer.toString(nextInstr + 3));
+            emit(OpCode.ldc, "1");
+            emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
+            emit(OpCode.ldc, "0");
+        }
 
         return null;
     }

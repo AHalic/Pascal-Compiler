@@ -46,9 +46,14 @@ public enum OpCode {
     label("", 1),
     //
     ifeq("ifeq", 1),
+    iflt("iflt", 1),
     ifgt("ifgt", 1),
+    ifge("ifge", 1),
     ifle("ifle", 1),
     ifne("ifne", 1),
+    ifnull("ifnull", 1),
+    fcmpg("fcmpg", 0),
+    fcmpl("fcmpl", 0),
     if_icmpeq("if_icmpeq", 1),
     if_icmple("if_icmple", 1),
     if_icmplt("if_icmplt", 1),
@@ -79,12 +84,16 @@ public enum OpCode {
             case "ifgt":
             case "ifle":
             case "ifne":
+            case "ifge":
+            case "iflt":
+            case "fcmpl":
             case "if_icmpeq":
             case "if_icmple":
             case "if_icmplt":
             case "if_icmpge":
             case "if_icmpgt":
             case "if_icmpne":
+            case "ifnull":
             case "goto":
                 return true;
         }
