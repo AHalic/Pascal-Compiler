@@ -15,5 +15,5 @@ begin
       a := a + 2;
    end;
    
-   write(a);
+   writeln(a);
 end.

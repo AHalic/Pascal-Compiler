@@ -18,5 +18,5 @@ begin
    else
       (* if condition is false then print the following *) 
       a := 4;
-   write(a);
+   writeln(a);
 end.

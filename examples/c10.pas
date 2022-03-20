@@ -14,7 +14,7 @@ end;
 
 function Nada : real;
 begin
-    write('Estou no corpo da funcao.')
+    writeln('Estou no corpo da funcao.')
 end;
 
 var
@@ -24,5 +24,5 @@ var
 begin
     add1 := Somar(1, 1);
     add1 := Subtrair(3, 1);
-    write('Estou no corpo do programa principal.')
+    writeln('Estou no corpo do programa principal.')
 end.

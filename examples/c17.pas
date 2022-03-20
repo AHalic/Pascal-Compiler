@@ -9,5 +9,5 @@ begin
         a := a + 1;
 
     if (a <= 5) then
-        write(a)
+        writeln(a)
 end.

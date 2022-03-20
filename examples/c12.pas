@@ -10,5 +10,5 @@ begin
       a := a + 2;
    
    a := a + 1;
-   write(a)
+   writeln(a)
 end.

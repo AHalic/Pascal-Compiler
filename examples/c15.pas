@@ -1,8 +1,8 @@
 program FunctionWithVars;
 
 var
-    a: real;
+    a: boolean;
 begin
-    a := 0;
-    write(NOT a);
+    a := false;
+    writeln(NOT a);
 end.

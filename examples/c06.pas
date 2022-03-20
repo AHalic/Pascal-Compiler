@@ -11,5 +11,5 @@ end;
 
 begin
     Teste(1.0, 2);
-    write('sai da função\n');
+    writeln('sai da função\n');
 end.

@@ -8,21 +8,21 @@ var
 
 begin
     number0 := 1;
-    write(number0);
+    writeln(number0);
     number1 := 3 - -2.0;
-    write(number1);
+    writeln(number1);
     number1 := number0 + number1;
-    write(number1);
+    writeln(number1);
 
     flag := (1.0 + (3 + 5));
-    write(flag);
+    writeln(flag);
 
     number := 10.0 * 2.0;
-    write(number);
+    writeln(number);
     number := 10.0/2.0;
-    write(number);
+    writeln(number);
     number := 3/1.0;
-    write(number);
+    writeln(number);
 
     //number1 := 2.1;
     //number1 := -3.0;

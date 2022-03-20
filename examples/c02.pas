@@ -13,6 +13,5 @@ begin
 
     write(name1);
     write(' say hello to ');
-    write(name2);
-    write('\n');
+    writeln(name2);
 end.

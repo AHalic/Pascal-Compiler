@@ -1,4 +1,4 @@
-program ifprog(input, output);
+program ifprog;
  
 (*** Demonstrate the if.  ***)
  
@@ -8,24 +8,25 @@ var
 (* **************************    main      ********************************** *)
  
 begin
-  writeln('Please enter an integer between 0 and 100');
+//   writeln('Please enter an integer between 0 and 100');
   read(number);
-  while (number < 0) and (number > 100) do begin
-     writeln('Try again please, integer between 0 and 100');
-     read(number);
-  end;
+  writeln(number);
+//   while (number < 0) do begin
+   //   writeln('Try again please, integer between 0 and 100');
+   //   read(number);
+//   end;
  
-  write('If this was a grade, you would receive a grade of:  ');
-  if number >= 90 then
-     write('A')
-  else if number >= 80 then
-     write('B')
-  else if number >= 70 then
-     write('C')
-  else if number >= 60 then
-     write('D')
-  else
-     write('F');
-  writeln;
+//   writeln('If this was a grade, you would receive a grade of:  ');
+//   if number >= 90 then
+   //   writeln('A')
+//   else if number >= 80 then
+   //   writeln('B')
+//   else if number >= 70 then
+   //   writeln('C')
+//   else if number >= 60 then
+   //   writeln('D')
+//   else
+   //   writeln('F');
+//   writeln;
 end.
 

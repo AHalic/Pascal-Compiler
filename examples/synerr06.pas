@@ -5,7 +5,7 @@ var
  do: string; (* Uso de palavra reservada*)
 begin
  clrscr;
-  Write('Enter a number:');
+  writeln('Enter a number:');
   readln(no);
 
   if (no > 0) then

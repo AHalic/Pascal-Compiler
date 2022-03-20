@@ -10,7 +10,7 @@ begin
     while a < 30 do
         begin
             a := a + 2;
-            write(a);
+            writeln(a);
         end;
    a := a + 1;
 end.
