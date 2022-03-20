@@ -290,7 +290,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         }
 
         // Emite o valor do lado direito
-        visit(plusNode.getChild(1));
+        if (plusNode.getChildCount() == 0) {
+            visit(plusNode);
+        } else {
+            visit(plusNode.getChild(1));
+        }
+
         emit(OpCode.invokevirtual, "java/lang/StringBuilder.append(Ljava/lang/String;)Ljava/lang/StringBuilder;");
         
         // Transforma o valor do builder em string e joga na pilha
@@ -374,7 +379,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         VariableTable fvt = function.getVariableTable();
 
         // Primeira posição é a própria função
-        for (int i = 1; i < fvt.size() - 1; i++) {
+        for (int i = 1; i < fvt.size(); i++) {
             declaration += getStringType(fvt.getType(i));
         }
         
@@ -425,6 +430,18 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(Structure.methodDeclaration, declaration);
         emit(Structure.limit, "stack", "65535");
         emit(Structure.limit, "locals", Integer.toString(localsNumber));
+
+        //
+        if (node.type == INT_TYPE || node.type == Type.BOOL_TYPE) {
+            emit(OpCode.ldc, "0");
+            emit(OpCode.istore, Integer.toString(function.getParameterQuantity()));
+        } else if (node.type == REAL_TYPE) {
+            emit(OpCode.ldc, "0.0");
+            emit(OpCode.fstore, Integer.toString(function.getParameterQuantity()));
+        } else if (node.type == Type.STR_TYPE) {
+            emit(OpCode.ldc, "\"\"");
+            emit(OpCode.astore, Integer.toString(function.getParameterQuantity()));
+        }
 
         // Faz o dump da tabela de strings
         dumpStrTable();

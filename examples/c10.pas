@@ -2,7 +2,7 @@
 
 program Functions;
 
-function Somar(add1, add2: integer) : integer;
+function Somar(add1, add2: integer) : real;
 begin
     Somar := add1 + add2;
 end;
@@ -17,12 +17,23 @@ begin
     writeln('Estou no corpo da funcao.')
 end;
 
+function Hello(person: string) : string;
+begin
+    writeln('Olá ' + person + ': O famoso cabeção!');
+end;
+
 var
    add1: real;
    add2: real;
 
 begin
-    add1 := Somar(1, 1);
-    add1 := Subtrair(3, 1);
+    add1 := Somar(10, 1);
+    writeln(add1);
+
+    add1 := Subtrair(0, 1);
+    writeln(add1);
+
+    Nada;
+    Hello('Marquinho do playson');
     writeln('Estou no corpo do programa principal.')
 end.

@@ -12,4 +12,5 @@ var
 
 begin
     a := Somar(1, 2.0);
+    writeln(a);
 end.
