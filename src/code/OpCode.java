@@ -16,8 +16,10 @@ public enum OpCode {
     astore("astore", 1),
     aload("aload", 1),
     aaload("aaload", 0),
-    baload("baload", 1),
+    baload("baload", 0),
     iaload("iaload", 0),
+    faload("faload", 0),
+    bastore("bastore", 0),
     //
     istore("istore", 1),
     iastore("iastore", 0),

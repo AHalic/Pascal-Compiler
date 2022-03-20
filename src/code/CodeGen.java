@@ -585,6 +585,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         if (node.getChild(0).kind == NodeKind.SUBSCRIPT_NODE) {
             int varIdxArray = node.getChild(0).getChild(0).intData;
             Array array = (Array)currentVars.get(varIdxArray);
+            Type arrayType = array.componentType;
             List<Range> ranges = array.getRanges();
             emit(OpCode.aload, Integer.toString(varIdxArray));
             
@@ -603,7 +604,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
             
             // Store
             visit(rexpr);
-            emitStore(varType, varIdxArray, true);
+            emitStore(arrayType, varIdxArray, true);
         } else {
             visit(rexpr);
             emitStore(varType, varIdx, false);
@@ -623,12 +624,14 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
                 emit(OpCode.astore, Integer.toString(varIdx));
             }
         } else {
-            if (varType == INT_TYPE || varType == Type.BOOL_TYPE) {
+            if (varType == INT_TYPE) {
                 emit(OpCode.iastore);
             } else if (varType == REAL_TYPE) {
                 emit(OpCode.fastore);
             } else if (varType == Type.STR_TYPE) {
                 emit(OpCode.aastore);
+            } else if (varType == Type.BOOL_TYPE) {
+                emit(OpCode.bastore);
             }
         }
 
@@ -804,7 +807,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
     protected Void visitNot(AST node) {
         visit(node.getChild(0));
 
-        // emit(OpCode.ineg);
         emit(OpCode.ifeq, Integer.toString(nextInstr + 3));
         emit(OpCode.ldc, "0");
         emit(OpCode.gotoProgram, Integer.toString(nextInstr + 2));
@@ -819,6 +821,8 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         int varIdxArray = node.getChild(0).intData;
         emit(OpCode.aload, Integer.toString(varIdxArray));
         List<Range> ranges = ((Array)currentVars.get(varIdxArray)).getRanges();
+        Type arrayType = ((Array)currentVars.get(varIdxArray)).componentType;
+        System.out.println(arrayType);
 
         int i = 1;
         // Index
@@ -832,7 +836,16 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(i));
         emit(OpCode.ldc, Integer.toString(ranges.get(i - 1).getLowerLimit()));
         emit(OpCode.isub);
-        emit(OpCode.iaload);
+
+        if (arrayType == INT_TYPE) {
+            emit(OpCode.iaload);
+        } else if (arrayType == REAL_TYPE) {
+            emit(OpCode.faload);
+        } else if (arrayType == Type.STR_TYPE) {
+            emit(OpCode.aaload);
+        } else if (arrayType == Type.BOOL_TYPE) {
+            emit(OpCode.baload);
+        }
 
         return null;
     }
