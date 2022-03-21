@@ -32,14 +32,14 @@ runall:
 	@./runall.sh
 
 run:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT)
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT) $(FLAGS)
 
 run_java:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT)
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT) $(FLAGS)
 	$(JAVA) -jar $(JASMIN_PATH) $(OUTPUT)
 
 run_dot:
-	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT) 2> graph.dot
+	$(JAVA) $(CLASS_PATH_OPTION):$(BIN_PATH) Main $(FILE) $(OUTPUT) $(FLAGS)
 	@dot -Tpng graph.dot -o graph.png
 
 clean:

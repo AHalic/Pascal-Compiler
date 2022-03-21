@@ -50,8 +50,13 @@ public class Main {
                     // O parser ocorreu sem problemas
                     System.out.println("Parse successfull!");
 
-                    checker.printTables();
-                    checker.printAST();
+                    // Verifica se foi informado a flag da ast
+                    if (args.length >= 3 && args[2].contains("--tables"))
+                        checker.printTables();
+                    
+                    // Verifica se foi informado a flag da ast
+                    if (args.length >= 3 && args[2].contains("--ast"))
+                        checker.printAST();
 
                     // Carrega o arquivo de saída
                     FileWriter tmp = new FileWriter(args[1]);
