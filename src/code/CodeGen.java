@@ -150,8 +150,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitVarUse(AST node) {
-        System.out.println("VAR USE");
-
         int varIdx = node.intData;
 
         if (scope == Scope.FUNCTION && paramsQtd > 0) {
@@ -172,7 +170,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitTimes(AST node) {
-        System.out.println("TIMES");
         visit(node.getChild(0));
         visit(node.getChild(1));
 
@@ -192,7 +189,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitMinus(AST node) {
-        System.out.println("MINUS");
         visit(node.getChild(0));
         visit(node.getChild(1));
         
@@ -213,7 +209,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitOver(AST node) {
-        System.out.println("OVER");
         visit(node.getChild(0));
         visit(node.getChild(1));
 
@@ -253,7 +248,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
         emit(OpCode.iadd);
-        System.out.println("PLUS INT");
 
         return null; 
     }
@@ -262,7 +256,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         visit(node.getChild(0));
         visit(node.getChild(1));
         emit(OpCode.fadd);
-        System.out.println("PLUS REAL");
 
         return null; 
     }
@@ -318,14 +311,11 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitVarDecl(AST node) {
-        System.out.println("VAR_DECL");
-
         return null; 
     }
 
     @Override
     protected Void visitVarList(AST node) {
-        System.out.println("VAR_LIST");
         visit(node.getChild(0));
 
         // TODO ARRAY DECLARAR
@@ -337,7 +327,7 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
                 // COLOCAR TODAS AS DIMENSÕES
                 for (int j = 0; j < ranges.size(); j++) {
                     int lowerLimit = ranges.get(j).getLowerLimit();
-                    emit(OpCode.ldc, Integer.toString(ranges.get(j).getUpperLimit() - lowerLimit));
+                    emit(OpCode.ldc, Integer.toString(ranges.get(j).getUpperLimit() - lowerLimit + 1));
                 }
 
                 emit(OpCode.multianewarray, typeToString(a.componentType, ranges.size()), Integer.toString(ranges.size()));
@@ -349,8 +339,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitFuncList(AST node) {
-        System.out.println("FUNC LIST");
-
         for (int i = 0; i < node.getChildCount(); i++) {
             visit(node.getChild(i));
         }
@@ -412,7 +400,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitFunction(AST node) {
-        System.out.println("FUNCTION");
         // Pegamos o envelope da função e pegamos a primeira declaração,
         // apenas funçõs built-in terão mais de uma definição.
         Function function = this.ft.get(node.intData).getFunctions().get(0);
@@ -512,8 +499,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitFuncUse(AST node) {
-        System.out.println("FUNC USE");
-
         /* Caso seja uma função built-in irá retornar false, caso contrário
            o código da função é emitido */
         if (!emitBuiltInFunction(node)) {
@@ -543,14 +528,12 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitIntVal(AST node) {
-        System.out.println("INTVAL");
         emit(OpCode.ldc, Integer.toString(node.intData));
         return null; 
     }
 
     @Override
     protected Void visitBoolVal(AST node) {
-        System.out.println("BOOLVAL");
         emit(OpCode.ldc, Integer.toString(node.intData));
         return null; 
     }
@@ -571,7 +554,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitAssign(AST node) {
-        System.out.println("ASSIGN");
         AST rexpr = node.getChild(1);
         
         int varIdx = node.getChild(0).intData;
@@ -822,7 +804,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
         emit(OpCode.aload, Integer.toString(varIdxArray));
         List<Range> ranges = ((Array)currentVars.get(varIdxArray)).getRanges();
         Type arrayType = ((Array)currentVars.get(varIdxArray)).componentType;
-        System.out.println(arrayType);
 
         int i = 1;
         // Index
@@ -852,7 +833,6 @@ public final class CodeGen extends ASTBaseVisitor<Void> {
 
     @Override
     protected Void visitArray(AST node) {
-        System.out.println("Entrou 2");
         return null;
     }
 
