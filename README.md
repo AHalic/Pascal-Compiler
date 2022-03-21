@@ -1,7 +1,6 @@
 # Pascal-Compiler
 
 This is an implementation of a Pascal compiler using Java made by:
-
 Gabriel Soares, Marco Oliari and Sophie Dilhon
 
 In this stage of the project, the compiler generates JVM (bytecode) based on the AST implemented in a prior stage.
