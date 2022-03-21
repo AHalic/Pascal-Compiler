@@ -7,10 +7,14 @@ Gabriel Soares, Marco Oliari and Sophie Dilhon
 In this stage of the project, the compiler generates JVM (bytecode) based on the AST implemented in a prior stage.
 
 ## How to run
-To compile and run the code, you can run in your command line:
+To compile the code, you can run in your command line:
 ```sh
-make all
-make runall
+make
+make run_java FILE=examples/file_name.pas OUTPUT=outputs/file_name.pas.j
 ```
 
-The output and the dot files will be located in a directory called `out`.
+The `file_name` must be replaced. After that the class file will be generated, to run that you should do:
+
+```sh
+java ClassName.class
+```
