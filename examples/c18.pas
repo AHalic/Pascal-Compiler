@@ -1,4 +1,4 @@
-program Arrays1;
+program Arrays3;
 
 var
     a: integer;

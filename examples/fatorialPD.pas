@@ -18,6 +18,7 @@ begin
       n := n + 1;
     end;
 
+  writeln('Digite um valor inteiro entre 0 e 12::')
   // Lê o primeiro n
   read(n);
 
@@ -30,6 +31,7 @@ begin
       writeln(fatoriais[n]);
 
       // Lê o próximo n
+      writeln('Digite outro valor inteiro entre 0 e 12:')
       read(n);
     end;
 

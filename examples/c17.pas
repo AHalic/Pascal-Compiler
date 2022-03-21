@@ -1,4 +1,4 @@
-program FunctionWithVars;
+program ifAndWhile;
 
 var
     a: integer;
