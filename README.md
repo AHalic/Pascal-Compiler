@@ -16,5 +16,5 @@ make run_java FILE=examples/file_name.pas OUTPUT=outputs/file_name.pas.j
 The `file_name` must be replaced. After that the class file will be generated, to run that you should do:
 
 ```sh
-java ClassName.class
+java ClassName
 ```
