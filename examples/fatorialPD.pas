@@ -1,51 +1,41 @@
 program FatorialPD;
 
 var
-  n, x, Contador, fatorial: integer;
-  resultados: array [0..100] of integer;
+  n, contador: integer;
+  // Não é possível armazenar fatoriais acima de 12 em inteiros
+  fatoriais: array [0..12] of integer;
 begin
-  //
-  n := 0;
+  // Define os fatoriais de 0 e 1 como 1
+  fatoriais[0] := 1;
+  fatoriais[1] := 1;
 
-  while (n < 100) do
+  // Calcula os fatoriais de 2 até 12
+  n := 2;
+
+  while (n <= 12) do
     begin;
-      resultados[n] := 0;
+      fatoriais[n] := n*fatoriais[n - 1];
       n := n + 1;
     end;
 
-  // 
-  writeln('');
-  writeln('           Calculo do fatorial de um numero');
-  writeln('');
+  // Lê o primeiro n
+  read(n);
 
-  while (true) do
-    begin
-      write('Entre com um inteiro nao-negativo: ');
-      read(n);
-    
-      fatorial := 1;
-      Contador := 1;
-
-      while (n >= Contador) do
-        begin
-          if (resultados[n] = 0) then
-            begin
-              resultados[Contador] := fatorial*Contador;
-              fatorial := resultados[Contador];
-              Contador := Contador+1;
-              writeln('Calculando!');
-            end
-          else
-            begin
-              fatorial := resultados[n];
-              Contador := n + 1;
-              writeln('Já Calculado!');
-            end;
-        end;
-
-      write ('O valor de ');
+  // Repete enquanto o valor de n for válido
+  while ((n >= 0) AND (n <= 12)) do
+    begin;
+      // Escreve o fatorial de n
       write(n);
-      write('!: ');
-      writeln(fatorial);
-  end;
+      write('! = ');
+      writeln(fatoriais[n]);
+
+      // Lê o próximo n
+      read(n);
+    end;
+
+  // Imprime o motivo da quebra do loop
+  if (n <= 0) then
+      writeln('Número negativo!')
+  else
+      writeln('Não é possível calcular fatoriais acima de 12!')
 end.
